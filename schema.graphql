@@ -1,0 +1,25 @@
+type ExampleEntity @entity {
+  id: ID!
+  count: BigInt!
+  investmentDay: BigInt! # uint256
+  randomSupply: BigInt! # uint256
+}
+
+type User @entity {
+  id: ID!
+  reservations: [Reservation!]
+  referrals: [Referral!]
+}
+
+type Reservation @entity {
+  id: ID!
+  user: User!
+  investmentDay: BigInt!
+  amount: BigInt!
+}
+
+type Referral @entity {
+  id: ID!
+  referer: User!
+  referee: User!
+}

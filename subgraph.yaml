@@ -1,0 +1,46 @@
+specVersion: 0.0.2
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: WISE Token subgraph
+    network: mainnet
+    source:
+      address: "0xfef0d2f3a79b4338d8418003dd9df89281242063"
+      abi: Contract
+      startBlock: 11010573
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - GeneratedRandomSupply
+        - GeneratedStaticSupply
+        - GeneratingRandomSupply
+        - GenerationStatus
+        - LogNewProvableQuery
+        - ReferralAdded
+        - UniSwapResult
+        - WiseReservation
+        - User
+      abis:
+        - name: Contract
+          file: ./abis/Contract.json
+      eventHandlers:
+        - event: GeneratedRandomSupply(indexed uint256,uint256)
+          handler: handleGeneratedRandomSupply
+        - event: GeneratedStaticSupply(indexed uint256,uint256)
+          handler: handleGeneratedStaticSupply
+        - event: GeneratingRandomSupply(indexed uint256)
+          handler: handleGeneratingRandomSupply
+        - event: GenerationStatus(indexed uint64,bool)
+          handler: handleGenerationStatus
+        - event: LogNewProvableQuery(string)
+          handler: handleLogNewProvableQuery
+        - event: ReferralAdded(indexed address,indexed address,uint256)
+          handler: handleReferralAdded
+        - event: UniSwapResult(uint256,uint256,uint256)
+          handler: handleUniSwapResult
+        - event: WiseReservation(indexed address,indexed uint256,uint256)
+          handler: handleWiseReservation
+      file: ./src/mapping.ts
