@@ -1,4 +1,5 @@
 .DS_STORE
+deploy.sh
 yarn-error.log
 node_modules/
 .idea/
