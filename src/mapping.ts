@@ -9,7 +9,7 @@ import {
   ReferralAdded,
   UniSwapResult,
   WiseReservation
-} from "../generated/Contract/Contract"
+} from "../generated/WiseLiquidityTransformer/Contract"
 import { ExampleEntity, User, Reservation } from "../generated/schema"
 
 export function handleGeneratedRandomSupply(

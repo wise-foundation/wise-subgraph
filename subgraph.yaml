@@ -3,7 +3,7 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: WISE Token subgraph
+    name: WiseLiquidityTransformer
     network: mainnet
     source:
       address: "0xfef0d2f3a79b4338d8418003dd9df89281242063"
