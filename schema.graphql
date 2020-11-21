@@ -20,6 +20,6 @@ type Reservation @entity {
 
 type Referral @entity {
   id: ID!
-  referer: User!
+  referrer: User!
   referee: User!
 }
