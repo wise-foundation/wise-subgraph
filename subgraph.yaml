@@ -7,7 +7,7 @@ dataSources:
     network: mainnet
     source:
       address: "0xfef0d2f3a79b4338d8418003dd9df89281242063"
-      abi: Contract
+      abi: LiquidityTransformer
       startBlock: 11010573
     mapping:
       kind: ethereum/events
@@ -24,8 +24,8 @@ dataSources:
         - WiseReservation
         - User
       abis:
-        - name: Contract
-          file: ./abis/Contract.json
+        - name: LiquidityTransformer
+          file: ./abis/LiquidityTransformer.json
       eventHandlers:
         - event: GeneratedRandomSupply(indexed uint256,uint256)
           handler: handleGeneratedRandomSupply
