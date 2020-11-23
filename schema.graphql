@@ -1,7 +1,7 @@
 type User @entity {
   id: ID!
-  reservations: [Reservation!]
-  referrals: [Referral!]
+  reservations: [Reservation!]!
+  referrals: [Referral!]!
   referredEth: BigInt!
 }
 
