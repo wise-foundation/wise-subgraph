@@ -14,33 +14,16 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - GeneratedRandomSupply
-        - GeneratedStaticSupply
-        - GeneratingRandomSupply
-        - GenerationStatus
-        - LogNewProvableQuery
         - ReferralAdded
-        - UniSwapResult
         - WiseReservation
         - User
+        - Transaction
       abis:
         - name: LiquidityTransformer
           file: ./abis/LiquidityTransformer.json
       eventHandlers:
-        - event: GeneratedRandomSupply(indexed uint256,uint256)
-          handler: handleGeneratedRandomSupply
-        - event: GeneratedStaticSupply(indexed uint256,uint256)
-          handler: handleGeneratedStaticSupply
-        - event: GeneratingRandomSupply(indexed uint256)
-          handler: handleGeneratingRandomSupply
-        - event: GenerationStatus(indexed uint64,bool)
-          handler: handleGenerationStatus
-        - event: LogNewProvableQuery(string)
-          handler: handleLogNewProvableQuery
         - event: ReferralAdded(indexed address,indexed address,uint256)
           handler: handleReferralAdded
-        - event: UniSwapResult(uint256,uint256,uint256)
-          handler: handleUniSwapResult
         - event: WiseReservation(indexed address,indexed uint256,uint256)
           handler: handleWiseReservation
       file: ./src/mapping.ts

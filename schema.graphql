@@ -1,12 +1,23 @@
+type Transaction @entity {
+  id: ID!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  sender: User!
+  reservations: [Reservation!]! @derivedFrom(field: "transaction")
+  referral: Referral @derivedFrom(field: "transaction")
+}
+
 type User @entity {
   id: ID!
-  reservations: [Reservation!]!
-  referrals: [Referral!]!
+  transactions: [Transaction!]! @derivedFrom(field: "sender")
+  reservations: [Reservation!]! @derivedFrom(field: "user")
+  referrals: [Referral!]! @derivedFrom(field: "referrer")
   referredEth: BigInt!
 }
 
 type Reservation @entity {
   id: ID!
+  transaction: Transaction!
   user: User!
   investmentDay: BigInt!
   amount: BigInt!
@@ -14,6 +25,7 @@ type Reservation @entity {
 
 type Referral @entity {
   id: ID!
+  transaction: Transaction!
   referrer: User!
   referee: User!
   amount: BigInt!

@@ -1,27 +1,86 @@
 import { BigInt } from "@graphprotocol/graph-ts"
 import {
-  LiquidityTransformer,
-  GeneratedRandomSupply,
-  GeneratedStaticSupply,
-  GeneratingRandomSupply,
-  GenerationStatus,
-  LogNewProvableQuery,
   ReferralAdded,
-  UniSwapResult,
   WiseReservation
 } from "../generated/WiseLiquidityTransformer/LiquidityTransformer"
-import { User, Reservation, Referral } from "../generated/schema"
+import { User, Reservation, Referral, Transaction } from "../generated/schema"
 
-export function handleGeneratedRandomSupply(
-  event: GeneratedRandomSupply
-): void {}
+function getOrCreateUser(id: string): User | null {
+  let user = User.load(id)
+  if (user == null) {
+    user = new User(id)
+    user.referredEth = BigInt.fromI32(0)
+  }
+  return user
+}
+
+function getOrCreateTransaction(id: string, senderID: string, blockNumber: BigInt, timestamp: BigInt): Transaction | null {
+  let transaction = Transaction.load(id)
+  if (transaction == null) {
+    transaction = new Transaction(id)
+    transaction.blockNumber = blockNumber
+    transaction.timestamp = timestamp
+    transaction.sender = senderID
+  }
+  return transaction
+}
+
+export function handleReferralAdded(event: ReferralAdded): void {
+  let txHash = event.transaction.hash.toHexString()
+  let txFrom = event.transaction.from.toHexString()
+  let transaction = getOrCreateTransaction(txHash, txFrom, event.block.number, event.block.timestamp)
+  transaction.save()
+
+  let referrerID = event.params.referral.toHexString()
+  let referrer = getOrCreateUser(referrerID)
+
+  let refereeID = event.params.referee.toHexString()
+  let referee = getOrCreateUser(refereeID)
+  referee.save()
+
+  let referralID = event.transaction.hash.toHexString()
+  let referral = Referral.load(referralID)
+  if (referral == null) {
+    referral = new Referral(referralID)
+    referral.transaction = transaction.id
+    referral.referrer = referrer.id
+    referral.referee = referee.id
+    referral.amount = event.params.amount
+  }
+  referral.save()
+
+  referrer.referredEth = referrer.referredEth.plus(event.params.amount)
+  referrer.save()
+}
+
+export function handleWiseReservation(event: WiseReservation): void {
+  let txHash = event.transaction.hash.toHexString()
+  let txFrom = event.transaction.from.toHexString()
+  let transaction = getOrCreateTransaction(txHash, txFrom, event.block.number, event.block.timestamp)
+  transaction.save()
+
+  let userID = event.transaction.from.toHexString()
+  let user = getOrCreateUser(userID)
+  user.save()
+
+  let reservationID = event.transaction.hash.toHexString() + "-" + event.params.investmentDay.toString()
+  let reservation = Reservation.load(reservationID)
+  if (reservation == null) {
+    reservation = new Reservation(reservationID)
+    reservation.transaction = transaction.id
+    reservation.user = user.id
+    reservation.investmentDay = event.params.investmentDay
+    reservation.amount = event.params.amount
+  }
+  reservation.save()
+}
 
 /*
-  // Entities can be loaded from the store using a string ID; this ID
+  // Entities can be loaded from the store using a string ID this ID
   // needs to be unique across all entities of the same type
   let entity = ExampleEntity.load(event.transaction.from.toHex())
 
-  // Entities only exist after they have been saved to the store;
+  // Entities only exist after they have been saved to the store
   // `null` checks allow to create entities on demand
   if (entity == null) {
     entity = new ExampleEntity(event.transaction.from.toHex())
@@ -87,66 +146,3 @@ export function handleGeneratedRandomSupply(
   // - contract.uniqueInvestors(...)
 }
  */
-
-export function handleGeneratedStaticSupply(
-  event: GeneratedStaticSupply
-): void {}
-
-export function handleGeneratingRandomSupply(
-  event: GeneratingRandomSupply
-): void {}
-
-export function handleGenerationStatus(event: GenerationStatus): void {}
-
-export function handleLogNewProvableQuery(event: LogNewProvableQuery): void {}
-
-export function handleReferralAdded(event: ReferralAdded): void {
-  let userID = event.params.referral.toHexString();
-  let user = User.load(userID);
-  if (user == null) {
-    user = new User(userID);
-    user.reservations = [];
-    user.referrals = []
-    user.referredEth = BigInt.fromI32(0)
-  }
-
-  let referralID = event.transaction.hash.toHexString();
-  let referral = Referral.load(referralID);
-  if (referral == null) {
-    referral = new Referral(referralID);
-    referral.referrer = event.params.referral.toHex();
-    referral.referee = event.params.referee.toHex();
-    referral.amount = event.params.amount;
-  }
-  referral.save();
-
-  user.referrals = user.referrals.concat([referral.id]);
-  user.referredEth += event.params.amount;
-  user.save();
-}
-
-export function handleUniSwapResult(event: UniSwapResult): void {}
-
-export function handleWiseReservation(event: WiseReservation): void {
-  let userID = event.transaction.from.toHexString();
-  let user = User.load(userID);
-  if (user == null) {
-    user = new User(userID);
-    user.reservations = [];
-    user.referrals = []
-    user.referredEth = BigInt.fromI32(0)
-  }
-
-  let reservationID = event.transaction.hash.toHexString() + "-" + event.params.investmentDay.toString();
-  let reservation = Reservation.load(reservationID)
-  if (reservation == null) {
-    reservation = new Reservation(reservationID);
-    reservation.user = user.id
-    reservation.investmentDay = event.params.investmentDay;
-    reservation.amount = event.params.amount;
-  }
-  reservation.save();
-
-  user.reservations = user.reservations.concat([reservation.id]);
-  user.save();
-}
