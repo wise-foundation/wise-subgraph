@@ -1,9 +1,14 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt, ethereum } from "@graphprotocol/graph-ts"
 import {
   ReferralAdded,
   WiseReservation
 } from "../generated/WiseLiquidityTransformer/LiquidityTransformer"
-import { User, Reservation, Referral, Transaction } from "../generated/schema"
+import {
+  User,
+  Reservation,
+  Referral,
+  Transaction,
+} from "../generated/schema"
 
 function getOrCreateUser(id: string): User | null {
   let user = User.load(id)
@@ -15,22 +20,17 @@ function getOrCreateUser(id: string): User | null {
   return user
 }
 
-function getOrCreateTransaction(id: string, senderID: string, blockNumber: BigInt, timestamp: BigInt): Transaction | null {
-  let transaction = Transaction.load(id)
-  if (transaction == null) {
-    transaction = new Transaction(id)
-    transaction.blockNumber = blockNumber
-    transaction.timestamp = timestamp
-    transaction.sender = senderID
-  }
+function upsertTransaction(tx: ethereum.Transaction, block: ethereum.Block): Transaction | null {
+  let transaction = new Transaction(tx.hash.toHexString())
+  transaction.blockNumber = block.number
+  transaction.timestamp = block.timestamp
+  transaction.sender = tx.from.toHexString()
+  transaction.save()
   return transaction
 }
 
 export function handleReferralAdded(event: ReferralAdded): void {
-  let txHash = event.transaction.hash.toHexString()
-  let txFrom = event.transaction.from.toHexString()
-  let transaction = getOrCreateTransaction(txHash, txFrom, event.block.number, event.block.timestamp)
-  transaction.save()
+  let transaction = upsertTransaction(event.transaction, event.block)
 
   let referrerID = event.params.referral.toHexString()
   let referrer = getOrCreateUser(referrerID)
@@ -40,14 +40,11 @@ export function handleReferralAdded(event: ReferralAdded): void {
   referee.save()
 
   let referralID = event.transaction.hash.toHexString()
-  let referral = Referral.load(referralID)
-  if (referral == null) {
-    referral = new Referral(referralID)
-    referral.transaction = transaction.id
-    referral.referrer = referrer.id
-    referral.referee = referee.id
-    referral.amount = event.params.amount
-  }
+  let referral = new Referral(referralID)
+  referral.transaction = transaction.id
+  referral.referrer = referrer.id
+  referral.referee = referee.id
+  referral.amount = event.params.amount
   referral.save()
 
   referrer.referredEth = referrer.referredEth.plus(referral.amount)
@@ -55,23 +52,17 @@ export function handleReferralAdded(event: ReferralAdded): void {
 }
 
 export function handleWiseReservation(event: WiseReservation): void {
-  let txHash = event.transaction.hash.toHexString()
-  let txFrom = event.transaction.from.toHexString()
-  let transaction = getOrCreateTransaction(txHash, txFrom, event.block.number, event.block.timestamp)
-  transaction.save()
+  let transaction = upsertTransaction(event.transaction, event.block)
 
   let userID = event.transaction.from.toHexString()
   let user = getOrCreateUser(userID)
 
   let reservationID = event.transaction.hash.toHexString() + "-" + event.params.investmentDay.toString()
-  let reservation = Reservation.load(reservationID)
-  if (reservation == null) {
-    reservation = new Reservation(reservationID)
-    reservation.transaction = transaction.id
-    reservation.user = user.id
-    reservation.investmentDay = event.params.investmentDay
-    reservation.amount = event.params.amount
-  }
+  let reservation = new Reservation(reservationID)
+  reservation.transaction = transaction.id
+  reservation.user = user.id
+  reservation.investmentDay = event.params.investmentDay
+  reservation.amount = event.params.amount
   reservation.save()
 
   user.reservedEth = user.reservedEth.plus(reservation.amount)
