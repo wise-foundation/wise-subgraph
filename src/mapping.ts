@@ -9,6 +9,7 @@ function getOrCreateUser(id: string): User | null {
   let user = User.load(id)
   if (user == null) {
     user = new User(id)
+    user.reservedEth = BigInt.fromI32(0)
     user.referredEth = BigInt.fromI32(0)
   }
   return user
@@ -49,7 +50,7 @@ export function handleReferralAdded(event: ReferralAdded): void {
   }
   referral.save()
 
-  referrer.referredEth = referrer.referredEth.plus(event.params.amount)
+  referrer.referredEth = referrer.referredEth.plus(referral.amount)
   referrer.save()
 }
 
@@ -61,7 +62,6 @@ export function handleWiseReservation(event: WiseReservation): void {
 
   let userID = event.transaction.from.toHexString()
   let user = getOrCreateUser(userID)
-  user.save()
 
   let reservationID = event.transaction.hash.toHexString() + "-" + event.params.investmentDay.toString()
   let reservation = Reservation.load(reservationID)
@@ -73,6 +73,9 @@ export function handleWiseReservation(event: WiseReservation): void {
     reservation.amount = event.params.amount
   }
   reservation.save()
+
+  user.reservedEth = user.reservedEth.plus(reservation.amount)
+  user.save()
 }
 
 /*
