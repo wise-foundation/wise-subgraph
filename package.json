@@ -11,11 +11,10 @@
     "remove-local": "graph remove --node http://localhost:8020/ wise-foundation/wise",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 wise-foundation/wise"
   },
-  "dependencies": {
-    "@graphprotocol/graph-cli": "0.19.0",
-    "@graphprotocol/graph-ts": "0.19.0"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@graphprotocol/graph-cli": "^0.19.0",
+    "@graphprotocol/graph-ts": "^0.19.0",
     "del-cli": "^3.0.1"
   }
 }
