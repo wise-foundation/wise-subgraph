@@ -42,6 +42,7 @@ export function handleReferralAdded(event: ReferralAdded): void {
   let referralID = event.transaction.hash.toHexString()
   let referral = new Referral(referralID)
   referral.transaction = transaction.id
+  referral.timestamp = transaction.timestamp
   referral.referrer = referrer.id
   referral.referee = referee.id
   referral.amount = event.params.amount
@@ -60,6 +61,7 @@ export function handleWiseReservation(event: WiseReservation): void {
   let reservationID = event.transaction.hash.toHexString() + "-" + event.params.investmentDay.toString()
   let reservation = new Reservation(reservationID)
   reservation.transaction = transaction.id
+  reservation.timestamp = transaction.timestamp
   reservation.user = user.id
   reservation.investmentDay = event.params.investmentDay
   reservation.amount = event.params.amount

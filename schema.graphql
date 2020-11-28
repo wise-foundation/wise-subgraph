@@ -19,6 +19,7 @@ type User @entity {
 type Reservation @entity {
   id: ID!
   transaction: Transaction!
+  timestamp: BigInt!
   user: User!
   investmentDay: BigInt!
   amount: BigInt!
@@ -27,6 +28,7 @@ type Reservation @entity {
 type Referral @entity {
   id: ID!
   transaction: Transaction!
+  timestamp: BigInt!
   referrer: User!
   referee: User!
   amount: BigInt!
