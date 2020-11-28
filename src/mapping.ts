@@ -6,6 +6,7 @@ import {
 import {
   User,
   Reservation,
+  UserReservationDay,
   Referral,
   Transaction,
 } from "../generated/schema"
@@ -69,6 +70,19 @@ export function handleWiseReservation(event: WiseReservation): void {
 
   user.reservedEth = user.reservedEth.plus(reservation.amount)
   user.save()
+
+  let reservationDayID = userID + "-" + reservation.investmentDay.toString();
+  let reservationDay = UserReservationDay.load(reservationDayID);
+  if (reservationDay == null) {
+    reservationDay = new UserReservationDay(reservationDayID)
+    reservationDay.user = user.id
+    reservationDay.investmentDay = reservation.investmentDay
+    reservationDay.totalAmount = BigInt.fromI32(0)
+    reservationDay.reservationCount = BigInt.fromI32(0)
+  }
+  reservationDay.totalAmount = reservationDay.totalAmount.plus(reservation.amount)
+  reservationDay.reservationCount = reservationDay.reservationCount.plus(BigInt.fromI32(1))
+  reservationDay.save()
 }
 
 /*

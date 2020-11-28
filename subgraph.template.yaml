@@ -4,20 +4,21 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: WiseLiquidityTransformer
-    network: mainnet
+    network: {{ network }}
     source:
-      address: "0xfef0d2f3a79b4338d8418003dd9df89281242063"
+      address: '{{ liquidityTransformerAddress }}'
       abi: LiquidityTransformer
-      startBlock: 11010573
+      startBlock: {{ startBlock }}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - ReferralAdded
-        - WiseReservation
-        - User
         - Transaction
+        - User
+        - Reservation
+        - Referral
+        - UserReservationDay
       abis:
         - name: LiquidityTransformer
           file: ./abis/LiquidityTransformer.json

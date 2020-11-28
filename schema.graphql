@@ -11,6 +11,7 @@ type User @entity {
   id: ID!
   transactions: [Transaction!]! @derivedFrom(field: "sender")
   reservations: [Reservation!]! @derivedFrom(field: "user")
+  reservationDays: [UserReservationDay!]! @derivedFrom(field: "user")
   referrals: [Referral!]! @derivedFrom(field: "referrer")
   reservedEth: BigInt!
   referredEth: BigInt!
@@ -32,4 +33,12 @@ type Referral @entity {
   referrer: User!
   referee: User!
   amount: BigInt!
+}
+
+type UserReservationDay @entity {
+  id: ID!
+  user: User!
+  investmentDay: BigInt!
+  totalAmount: BigInt!
+  reservationCount: BigInt!
 }
