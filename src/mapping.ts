@@ -1,7 +1,8 @@
 import { BigInt, ethereum } from "@graphprotocol/graph-ts"
 import {
   ReferralAdded,
-  WiseReservation
+  WiseReservation,
+  ReserveWiseCall
 } from "../generated/WiseLiquidityTransformer/LiquidityTransformer"
 import {
   User,
@@ -22,11 +23,16 @@ function getOrCreateUser(id: string): User | null {
 }
 
 function upsertTransaction(tx: ethereum.Transaction, block: ethereum.Block): Transaction | null {
-  let transaction = new Transaction(tx.hash.toHexString())
-  transaction.blockNumber = block.number
-  transaction.timestamp = block.timestamp
-  transaction.sender = tx.from.toHexString()
-  transaction.save()
+  let transaction = Transaction.load(tx.hash.toHexString())
+  if (transaction == null) {
+    transaction = new Transaction(tx.hash.toHexString())
+    transaction.blockNumber = block.number
+    transaction.timestamp = block.timestamp
+    transaction.ethAmount = BigInt.fromI32(0)
+    transaction.sender = tx.from.toHexString()
+    transaction.referral = null
+    transaction.save()
+  }
   return transaction
 }
 
@@ -51,6 +57,19 @@ export function handleReferralAdded(event: ReferralAdded): void {
 
   referrer.referredEth = referrer.referredEth.plus(referral.amount)
   referrer.save()
+
+  transaction.referral = referral.id
+  transaction.save()
+
+  for (let i = 1; i <= 50; i++) {
+    let resID = event.transaction.hash.toHexString() + "-" + i.toString()
+    let reservation = Reservation.load(resID)
+    if (reservation != null) {
+      reservation.referral = referral.id
+      reservation.realAmount = referral.amount
+      reservation.save()
+    }
+  }
 }
 
 export function handleWiseReservation(event: WiseReservation): void {
@@ -66,13 +85,15 @@ export function handleWiseReservation(event: WiseReservation): void {
   reservation.user = user.id
   reservation.investmentDay = event.params.investmentDay
   reservation.amount = event.params.amount
+  reservation.realAmount = event.params.amount
+  reservation.referral = null
   reservation.save()
 
   user.reservedEth = user.reservedEth.plus(reservation.amount)
   user.save()
 
-  let reservationDayID = userID + "-" + reservation.investmentDay.toString();
-  let reservationDay = UserReservationDay.load(reservationDayID);
+  let reservationDayID = userID + "-" + reservation.investmentDay.toString()
+  let reservationDay = UserReservationDay.load(reservationDayID)
   if (reservationDay == null) {
     reservationDay = new UserReservationDay(reservationDayID)
     reservationDay.user = user.id
@@ -85,6 +106,11 @@ export function handleWiseReservation(event: WiseReservation): void {
   reservationDay.save()
 }
 
+export function handleReserveWise(call: ReserveWiseCall): void {
+  let transaction = upsertTransaction(call.transaction, call.block)
+  transaction.ethAmount = call.transaction.value
+  transaction.save()
+}
 /*
   // Entities can be loaded from the store using a string ID this ID
   // needs to be unique across all entities of the same type

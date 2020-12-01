@@ -27,4 +27,7 @@ dataSources:
           handler: handleReferralAdded
         - event: WiseReservation(indexed address,indexed uint256,uint256)
           handler: handleWiseReservation
+      callHandlers:
+        - function: reserveWise(uint8[],address)
+          handler: handleReserveWise
       file: ./src/mapping.ts
