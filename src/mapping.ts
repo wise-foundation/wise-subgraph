@@ -8,6 +8,8 @@ import {
   User,
   Reservation,
   UserReservationDay,
+  GlobalReservationDay,
+  GlobalReservationHour,
   Referral,
   Transaction,
 } from "../generated/schema"
@@ -28,7 +30,6 @@ function upsertTransaction(tx: ethereum.Transaction, block: ethereum.Block): Tra
     transaction = new Transaction(tx.hash.toHexString())
     transaction.blockNumber = block.number
     transaction.timestamp = block.timestamp
-    transaction.ethAmount = BigInt.fromI32(0)
     transaction.sender = tx.from.toHexString()
     transaction.referral = null
     transaction.save()
@@ -61,14 +62,40 @@ export function handleReferralAdded(event: ReferralAdded): void {
   transaction.referral = referral.id
   transaction.save()
 
+  let resList = new Array<Reservation | null>()
+  let txHash = event.transaction.hash.toHexString()
   for (let i = 1; i <= 50; i++) {
-    let resID = event.transaction.hash.toHexString() + "-" + i.toString()
+    let resID = txHash + "-" + i.toString()
     let reservation = Reservation.load(resID)
     if (reservation != null) {
-      reservation.referral = referral.id
-      reservation.realAmount = referral.amount
-      reservation.save()
+      resList.push(reservation)
     }
+  }
+
+  let nRes = BigInt.fromI32(resList.length)
+  let dayRealAmount = referral.amount.div(nRes)
+  let remainder = referral.amount.mod(nRes)
+  for (let i = 0; i < resList.length; i++) {
+    let realAmount = i === 0
+        ? dayRealAmount.plus(remainder)
+        : dayRealAmount
+
+    let res = resList[i]
+    res.realAmount = realAmount
+    res.save()
+
+    let uResDay = UserReservationDay.load(res.user + "-" + res.investmentDay.toString())
+    uResDay.totalRealAmount = uResDay.totalRealAmount.plus(realAmount).minus(res.amount)
+    uResDay.save()
+
+    let gResDay = GlobalReservationDay.load(res.investmentDay.toString())
+    gResDay.totalRealAmount = gResDay.totalRealAmount.plus(realAmount).minus(res.amount)
+    gResDay.save()
+
+    let hour = event.block.timestamp.mod(BigInt.fromI32(86400)).div(BigInt.fromI32(3600))
+    let gResHour = GlobalReservationHour.load(res.investmentDay.toString() + "-" + hour.toString())
+    gResHour.totalRealAmount = gResHour.totalRealAmount.plus(realAmount).minus(res.amount)
+    gResHour.save()
   }
 }
 
@@ -92,25 +119,55 @@ export function handleWiseReservation(event: WiseReservation): void {
   user.reservedEth = user.reservedEth.plus(reservation.amount)
   user.save()
 
-  let reservationDayID = userID + "-" + reservation.investmentDay.toString()
-  let reservationDay = UserReservationDay.load(reservationDayID)
-  if (reservationDay == null) {
-    reservationDay = new UserReservationDay(reservationDayID)
-    reservationDay.user = user.id
-    reservationDay.investmentDay = reservation.investmentDay
-    reservationDay.totalAmount = BigInt.fromI32(0)
-    reservationDay.reservationCount = BigInt.fromI32(0)
+  let gResDayID = reservation.investmentDay.toString()
+  let gResDay = GlobalReservationDay.load(gResDayID)
+  if (gResDay == null) {
+    gResDay = new GlobalReservationDay(gResDayID)
+    gResDay.investmentDay = reservation.investmentDay
+    gResDay.totalAmount = BigInt.fromI32(0)
+    gResDay.totalRealAmount = BigInt.fromI32(0)
+    gResDay.reservationCount = BigInt.fromI32(0)
+    gResDay.userCount = BigInt.fromI32(0)
   }
-  reservationDay.totalAmount = reservationDay.totalAmount.plus(reservation.amount)
-  reservationDay.reservationCount = reservationDay.reservationCount.plus(BigInt.fromI32(1))
-  reservationDay.save()
+  gResDay.totalAmount = gResDay.totalAmount.plus(reservation.amount)
+  gResDay.totalRealAmount = gResDay.totalRealAmount.plus(reservation.amount)
+  gResDay.reservationCount = gResDay.reservationCount.plus(BigInt.fromI32(1))
+
+  let hour = event.block.timestamp.mod(BigInt.fromI32(86400)).div(BigInt.fromI32(3600))
+  let gResHourID = reservation.investmentDay.toString() + "-" + hour.toString()
+  let gResHour = GlobalReservationHour.load(gResHourID)
+  if (gResHour == null) {
+    gResHour = new GlobalReservationHour(gResHourID)
+    gResHour.investmentDay = reservation.investmentDay
+    gResHour.investmentHour = hour
+    gResHour.totalAmount = BigInt.fromI32(0)
+    gResHour.totalRealAmount = BigInt.fromI32(0)
+    gResHour.reservationCount = BigInt.fromI32(0)
+  }
+  gResHour.totalAmount = gResDay.totalAmount.plus(reservation.amount)
+  gResHour.totalRealAmount = gResDay.totalRealAmount.plus(reservation.amount)
+  gResHour.reservationCount = gResDay.reservationCount.plus(BigInt.fromI32(1))
+  gResHour.save()
+
+  let uResDayID = userID + "-" + reservation.investmentDay.toString()
+  let uResDay = UserReservationDay.load(uResDayID)
+  if (uResDay == null) {
+    uResDay = new UserReservationDay(uResDayID)
+    uResDay.user = user.id
+    uResDay.investmentDay = reservation.investmentDay
+    uResDay.totalAmount = BigInt.fromI32(0)
+    uResDay.totalRealAmount = BigInt.fromI32(0)
+    uResDay.reservationCount = BigInt.fromI32(0)
+    gResDay.userCount = gResDay.userCount.plus(BigInt.fromI32(1))
+  }
+  uResDay.totalAmount = uResDay.totalAmount.plus(reservation.amount)
+  uResDay.totalRealAmount = uResDay.totalRealAmount.plus(reservation.amount)
+  uResDay.reservationCount = uResDay.reservationCount.plus(BigInt.fromI32(1))
+  uResDay.save()
+
+  gResDay.save()
 }
 
-export function handleReserveWise(call: ReserveWiseCall): void {
-  let transaction = upsertTransaction(call.transaction, call.block)
-  transaction.ethAmount = call.transaction.value
-  transaction.save()
-}
 /*
   // Entities can be loaded from the store using a string ID this ID
   // needs to be unique across all entities of the same type

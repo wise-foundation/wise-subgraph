@@ -2,7 +2,6 @@ type Transaction @entity {
   id: ID!
   blockNumber: BigInt!
   timestamp: BigInt!
-  ethAmount: BigInt!
   sender: User!
   referral: Referral
   reservations: [Reservation!]! @derivedFrom(field: "transaction")
@@ -43,5 +42,24 @@ type UserReservationDay @entity {
   user: User!
   investmentDay: BigInt!
   totalAmount: BigInt!
+  totalRealAmount: BigInt!
+  reservationCount: BigInt!
+}
+
+type GlobalReservationDay @entity {
+  id: ID!
+  investmentDay: BigInt!
+  totalAmount: BigInt!
+  totalRealAmount: BigInt!
+  reservationCount: BigInt!
+  userCount: BigInt!
+}
+
+type GlobalReservationHour @entity {
+  id: ID!
+  investmentDay: BigInt!
+  investmentHour: BigInt!
+  totalAmount: BigInt!
+  totalRealAmount: BigInt!
   reservationCount: BigInt!
 }

@@ -2,14 +2,14 @@
   "name": "wise",
   "license": "UNLICENSED",
   "scripts": {
-    "clean": "del-cli ./generated ./build",
+    "clean": "del-cli ./generated ./build && npm run prepare:mainnet",
     "codegen": "graph codegen",
     "build": "graph build",
     "make": "npm run clean && npm run codegen && npm run build",
     "prepare:mainnet": "mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml",
     "prepare:ropsten": "mustache config/ropsten.json subgraph.template.yaml > subgraph.yaml",
-    "deploy:mainnet": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ wise-foundation/wise",
-    "deploy:ropsten": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ wise-foundation/wise-ropsten",
+    "deploy:mainnet": "npm run prepare:mainnet && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ wise-foundation/wise",
+    "deploy:ropsten": "npm run prepare:ropsten && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ wise-foundation/wise-ropsten",
     "create-local": "graph create --node http://localhost:8020/ wise-foundation/wise",
     "remove-local": "graph remove --node http://localhost:8020/ wise-foundation/wise",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 wise-foundation/wise"
