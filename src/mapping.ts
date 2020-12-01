@@ -9,7 +9,7 @@ import {
   Reservation,
   UserReservationDay,
   GlobalReservationDay,
-  GlobalReservationHour,
+  GlobalReservationDaySnapshot,
   Referral,
   Transaction,
 } from "../generated/schema"
@@ -92,10 +92,9 @@ export function handleReferralAdded(event: ReferralAdded): void {
     gResDay.totalRealAmount = gResDay.totalRealAmount.plus(realAmount).minus(res.amount)
     gResDay.save()
 
-    let hour = event.block.timestamp.mod(BigInt.fromI32(86400)).div(BigInt.fromI32(3600))
-    let gResHour = GlobalReservationHour.load(res.investmentDay.toString() + "-" + hour.toString())
-    gResHour.totalRealAmount = gResHour.totalRealAmount.plus(realAmount).minus(res.amount)
-    gResHour.save()
+    let gResDaySnapshot = new GlobalReservationDaySnapshot(res.investmentDay.toString() + "-" + event.block.timestamp.toString())
+    gResDaySnapshot.totalRealAmount = gResDay.totalRealAmount
+    gResDaySnapshot.save()
   }
 }
 
@@ -133,21 +132,13 @@ export function handleWiseReservation(event: WiseReservation): void {
   gResDay.totalRealAmount = gResDay.totalRealAmount.plus(reservation.amount)
   gResDay.reservationCount = gResDay.reservationCount.plus(BigInt.fromI32(1))
 
-  let hour = event.block.timestamp.mod(BigInt.fromI32(86400)).div(BigInt.fromI32(3600))
-  let gResHourID = reservation.investmentDay.toString() + "-" + hour.toString()
-  let gResHour = GlobalReservationHour.load(gResHourID)
-  if (gResHour == null) {
-    gResHour = new GlobalReservationHour(gResHourID)
-    gResHour.investmentDay = reservation.investmentDay
-    gResHour.investmentHour = hour
-    gResHour.totalAmount = BigInt.fromI32(0)
-    gResHour.totalRealAmount = BigInt.fromI32(0)
-    gResHour.reservationCount = BigInt.fromI32(0)
-  }
-  gResHour.totalAmount = gResDay.totalAmount.plus(reservation.amount)
-  gResHour.totalRealAmount = gResDay.totalRealAmount.plus(reservation.amount)
-  gResHour.reservationCount = gResDay.reservationCount.plus(BigInt.fromI32(1))
-  gResHour.save()
+  let gResDaySnapshotID = reservation.investmentDay.toString() + "-" + event.block.timestamp.toString()
+  let gResDaySnapshot = new GlobalReservationDaySnapshot(gResDaySnapshotID)
+  gResDaySnapshot.timestamp = event.block.timestamp
+  gResDaySnapshot.investmentDay = gResDay.investmentDay
+  gResDaySnapshot.totalAmount = gResDay.totalAmount
+  gResDaySnapshot.totalRealAmount = gResDay.totalRealAmount
+  gResDaySnapshot.reservationCount = gResDay.reservationCount
 
   let uResDayID = userID + "-" + reservation.investmentDay.toString()
   let uResDay = UserReservationDay.load(uResDayID)
@@ -166,6 +157,9 @@ export function handleWiseReservation(event: WiseReservation): void {
   uResDay.save()
 
   gResDay.save()
+
+  gResDaySnapshot.userCount = gResDay.userCount
+  gResDaySnapshot.save()
 }
 
 /*

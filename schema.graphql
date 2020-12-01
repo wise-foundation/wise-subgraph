@@ -55,11 +55,12 @@ type GlobalReservationDay @entity {
   userCount: BigInt!
 }
 
-type GlobalReservationHour @entity {
+type GlobalReservationDaySnapshot @entity {
   id: ID!
+  timestamp: BigInt!
   investmentDay: BigInt!
-  investmentHour: BigInt!
   totalAmount: BigInt!
   totalRealAmount: BigInt!
   reservationCount: BigInt!
+  userCount: BigInt!
 }
