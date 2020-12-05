@@ -49,6 +49,7 @@ type UserReservationDay @entity {
 type GlobalReservationDay @entity {
   id: ID!
   investmentDay: BigInt!
+  supply: BigInt
   totalAmount: BigInt!
   totalRealAmount: BigInt!
   reservationCount: BigInt!

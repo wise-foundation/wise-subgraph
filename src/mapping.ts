@@ -2,7 +2,8 @@ import { BigInt, ethereum } from "@graphprotocol/graph-ts"
 import {
   ReferralAdded,
   WiseReservation,
-  ReserveWiseCall
+  GeneratedStaticSupply,
+  GeneratedRandomSupply,
 } from "../generated/WiseLiquidityTransformer/LiquidityTransformer"
 import {
   User,
@@ -160,6 +161,18 @@ export function handleWiseReservation(event: WiseReservation): void {
 
   gResDaySnapshot.userCount = gResDay.userCount
   gResDaySnapshot.save()
+}
+
+export function handleGeneratedStaticSupply(event: GeneratedStaticSupply): void {
+  let day = GlobalReservationDay.load(event.params.investmentDay.toString())
+  day.supply = event.params.staticSupply
+  day.save()
+}
+
+export function handleGeneratedRandomSupply(event: GeneratedRandomSupply): void {
+  let day = GlobalReservationDay.load(event.params.investmentDay.toString())
+  day.supply = event.params.randomSupply
+  day.save()
 }
 
 /*

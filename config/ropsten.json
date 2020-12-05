@@ -1,5 +1,6 @@
 {
   "network": "ropsten",
   "liquidityTransformerAddress": "0xfafbFc24695178F74f158f70BD7EA6162d836A18",
+  "wiseAddress": "0x2306c52A206b2e847892496c29895217950d20e4",
   "startBlock": 8653977
 }

@@ -28,4 +28,8 @@ dataSources:
           handler: handleWiseReservation
         - event: ReferralAdded(indexed address,indexed address,uint256)
           handler: handleReferralAdded
+        - event: GeneratedStaticSupply(indexed uint256,uint256)
+          handler: handleGeneratedStaticSupply
+        - event: GeneratedRandomSupply(indexed uint256,uint256)
+          handler: handleGeneratedRandomSupply
       file: ./src/mapping.ts
