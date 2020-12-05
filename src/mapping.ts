@@ -24,9 +24,9 @@ let NORMAL_SUPPLY = BigInt.fromI32(5000000).times(BigInt.fromI32(10).pow(18)),
   MIN_SUPPLY_5 = BigInt.fromI32(2500000).times(BigInt.fromI32(10).pow(18)),
   MIN_SUPPLY_6 = BigInt.fromI32(1).times(BigInt.fromI32(10).pow(18))
 
-function getMinSupply (dayStr: string): BigInt {
-  let dayNum = parseInt(dayStr)
-  switch (dayNum) {
+function getMinSupply (day: BigInt): BigInt {
+  let dayVal = day.toI32()
+  switch (dayVal) {
     case 8: case 10:
       return MIN_SUPPLY_1
     case 14: case 16: case 17:
@@ -153,7 +153,7 @@ export function handleWiseReservation(event: WiseReservation): void {
   if (gResDay == null) {
     gResDay = new GlobalReservationDay(gResDayID)
     gResDay.investmentDay = reservation.investmentDay
-    gResDay.minSupply = getMinSupply(gResDay.investmentDay.toString())
+    gResDay.minSupply = getMinSupply(gResDay.investmentDay)
     gResDay.maxSupply = MAX_SUPPLY.minus(gResDay.minSupply)
     gResDay.totalAmount = BigInt.fromI32(0)
     gResDay.totalRealAmount = BigInt.fromI32(0)
