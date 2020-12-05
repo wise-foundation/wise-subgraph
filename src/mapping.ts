@@ -31,7 +31,7 @@ let NORMAL_SUPPLY = BigInt.fromI32(5000000).times(BigInt.fromI32(10).pow(18)),
 
 for (let i = 1; i <= 50; i++) {
   let day = new GlobalReservationDay(i.toString())
-  day.investmentDay = BigInt.fromI32(0)
+  day.investmentDay = BigInt.fromI32(i)
   let min = NORMAL_SUPPLY, max = NORMAL_SUPPLY
   switch (i) {
     case 8: case 10:
