@@ -59,6 +59,7 @@ for (let i = 1; i <= 50; i++) {
       max = MAX_SUPPLY_6
       break
   }
+  day.supply = null
   day.minSupply = min
   day.maxSupply = max
   day.totalAmount = BigInt.fromI32(0)
@@ -172,13 +173,7 @@ export function handleWiseReservation(event: WiseReservation): void {
   user.reservedEth = user.reservedEth.plus(reservation.amount)
   user.save()
 
-  let gResDayID = reservation.investmentDay.toString()
-  let gResDay = new GlobalReservationDay(gResDayID)
-  gResDay.investmentDay = reservation.investmentDay
-  gResDay.totalAmount = BigInt.fromI32(0)
-  gResDay.totalRealAmount = BigInt.fromI32(0)
-  gResDay.reservationCount = BigInt.fromI32(0)
-  gResDay.userCount = BigInt.fromI32(0)
+  let gResDay = GlobalReservationDay.load(reservation.investmentDay.toString())
   gResDay.totalAmount = gResDay.totalAmount.plus(reservation.amount)
   gResDay.totalRealAmount = gResDay.totalRealAmount.plus(reservation.amount)
   gResDay.reservationCount = gResDay.reservationCount.plus(BigInt.fromI32(1))
@@ -214,13 +209,13 @@ export function handleWiseReservation(event: WiseReservation): void {
 }
 
 export function handleGeneratedStaticSupply(event: GeneratedStaticSupply): void {
-  let day = GlobalReservationDay.load(event.params.investmentDay.toString())
+  let day = new GlobalReservationDay(event.params.investmentDay.toString())
   day.supply = event.params.staticSupply
   day.save()
 }
 
 export function handleGeneratedRandomSupply(event: GeneratedRandomSupply): void {
-  let day = GlobalReservationDay.load(event.params.investmentDay.toString())
+  let day = new GlobalReservationDay(event.params.investmentDay.toString())
   day.supply = event.params.randomSupply
   day.save()
 }
