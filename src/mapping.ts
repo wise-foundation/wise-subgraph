@@ -15,6 +15,59 @@ import {
   Transaction,
 } from "../generated/schema"
 
+let NORMAL_SUPPLY = BigInt.fromI32(5000000).times(BigInt.fromI32(10).pow(18)),
+  MIN_SUPPLY_1 = BigInt.fromI32(4500000).times(BigInt.fromI32(10).pow(18)),
+  MIN_SUPPLY_2 = BigInt.fromI32(4000000).times(BigInt.fromI32(10).pow(18)),
+  MIN_SUPPLY_3 = BigInt.fromI32(3500000).times(BigInt.fromI32(10).pow(18)),
+  MIN_SUPPLY_4 = BigInt.fromI32(3000000).times(BigInt.fromI32(10).pow(18)),
+  MIN_SUPPLY_5 = BigInt.fromI32(2500000).times(BigInt.fromI32(10).pow(18)),
+  MIN_SUPPLY_6 = BigInt.fromI32(1).times(BigInt.fromI32(10).pow(18)),
+  MAX_SUPPLY_1 = BigInt.fromI32(5500000).times(BigInt.fromI32(10).pow(18)),
+  MAX_SUPPLY_2 = BigInt.fromI32(6000000).times(BigInt.fromI32(10).pow(18)),
+  MAX_SUPPLY_3 = BigInt.fromI32(6500000).times(BigInt.fromI32(10).pow(18)),
+  MAX_SUPPLY_4 = BigInt.fromI32(7000000).times(BigInt.fromI32(10).pow(18)),
+  MAX_SUPPLY_5 = BigInt.fromI32(7500000).times(BigInt.fromI32(10).pow(18)),
+  MAX_SUPPLY_6 = BigInt.fromI32(9999999).times(BigInt.fromI32(10).pow(18))
+
+for (let i = 1; i <= 50; i++) {
+  let day = new GlobalReservationDay(i.toString())
+  day.investmentDay = BigInt.fromI32(0)
+  let min = NORMAL_SUPPLY, max = NORMAL_SUPPLY
+  switch (i) {
+    case 8: case 10:
+      min = MIN_SUPPLY_1
+      max = MAX_SUPPLY_1
+      break
+    case 14: case 16: case 17:
+      min = MIN_SUPPLY_2
+      max = MAX_SUPPLY_2
+      break
+    case 21: case 23: case 25:
+      min = MIN_SUPPLY_3
+      max = MAX_SUPPLY_3
+      break
+    case 29: case 31:
+      min = MIN_SUPPLY_4
+      max = MAX_SUPPLY_4
+      break
+    case 35: case 36: case 38:
+      min = MIN_SUPPLY_5
+      max = MAX_SUPPLY_5
+      break
+    case 12: case 19: case 26: case 33: case 40: case 42: case 44: case 46: case 47: case 48:
+      min = MIN_SUPPLY_6
+      max = MAX_SUPPLY_6
+      break
+  }
+  day.minSupply = min
+  day.maxSupply = max
+  day.totalAmount = BigInt.fromI32(0)
+  day.totalRealAmount = BigInt.fromI32(0)
+  day.reservationCount = BigInt.fromI32(0)
+  day.userCount = BigInt.fromI32(0)
+  day.save()
+}
+
 function getOrCreateUser(id: string): User | null {
   let user = User.load(id)
   if (user == null) {
@@ -120,15 +173,12 @@ export function handleWiseReservation(event: WiseReservation): void {
   user.save()
 
   let gResDayID = reservation.investmentDay.toString()
-  let gResDay = GlobalReservationDay.load(gResDayID)
-  if (gResDay == null) {
-    gResDay = new GlobalReservationDay(gResDayID)
-    gResDay.investmentDay = reservation.investmentDay
-    gResDay.totalAmount = BigInt.fromI32(0)
-    gResDay.totalRealAmount = BigInt.fromI32(0)
-    gResDay.reservationCount = BigInt.fromI32(0)
-    gResDay.userCount = BigInt.fromI32(0)
-  }
+  let gResDay = new GlobalReservationDay(gResDayID)
+  gResDay.investmentDay = reservation.investmentDay
+  gResDay.totalAmount = BigInt.fromI32(0)
+  gResDay.totalRealAmount = BigInt.fromI32(0)
+  gResDay.reservationCount = BigInt.fromI32(0)
+  gResDay.userCount = BigInt.fromI32(0)
   gResDay.totalAmount = gResDay.totalAmount.plus(reservation.amount)
   gResDay.totalRealAmount = gResDay.totalRealAmount.plus(reservation.amount)
   gResDay.reservationCount = gResDay.reservationCount.plus(BigInt.fromI32(1))
