@@ -28,7 +28,7 @@ export function handleStakeStart (event: StakeStart): void {
   let referrerID = event.params.referralAddress.toHexString()
   let referrer = User.load(referrerID)
   if (referrer == null) {
-    referrer = new User(referrerID)
+    referrer = createUser(referrerID)
     global.userCount = global.userCount.plus(BigInt.fromI32(1))
   }
   referrer.save()
