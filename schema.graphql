@@ -18,6 +18,7 @@ type User @entity {
   reservationCount: BigInt!
   reservationDayCount: BigInt!
   referralCount: BigInt!
+  stakeCount: BigInt!
 }
 
 type Reservation @entity {
@@ -78,8 +79,21 @@ type Global @entity {
   referrerCount: BigInt!
   cmReferrerCount: BigInt!
   reservationCount: BigInt!
+  stakeCount: BigInt!
+  stakerCount: BigInt!
 }
 
 type Stake @entity {
   id: ID!
+  staker: User!
+  referrer: User!
+  principal: BigInt!
+  shares: BigInt!
+  cmShares: BigInt!
+  startDay: BigInt!
+  lockDays: BigInt!
+  daiEquivalent: BigInt!
+  reward: BigInt
+  closeDay: BigInt
+  penalty: BigInt
 }

@@ -1,5 +1,9 @@
 import { BigInt, ethereum } from "@graphprotocol/graph-ts"
 import {
+  getOrCreateGlobal,
+  createUser
+} from "./shared"
+import {
   ReferralAdded,
   WiseReservation,
   GeneratedStaticSupply,
@@ -13,7 +17,6 @@ import {
   GlobalReservationDaySnapshot,
   Referral,
   Transaction,
-  Global,
 } from "../generated/schema"
 
 let CM_REFERRER_THRESHOLD = BigInt.fromI32(50).times(BigInt.fromI32(10).pow(18))
@@ -45,30 +48,6 @@ function getMinSupply (day: BigInt): BigInt {
     default:
       return NORMAL_SUPPLY
   }
-}
-
-function getOrCreateGlobal(): Global | null {
-  let global = Global.load("0")
-  if (global == null) {
-    global = new Global("0")
-    global.userCount = BigInt.fromI32(0)
-    global.reserverCount = BigInt.fromI32(0)
-    global.referrerCount = BigInt.fromI32(0)
-    global.cmReferrerCount = BigInt.fromI32(0)
-    global.reservationCount = BigInt.fromI32(0)
-    global.save()
-  }
-  return global
-}
-
-function createUser(id: string): User | null {
-  let user = new User(id)
-  user.reservedEth = BigInt.fromI32(0)
-  user.referredEth = BigInt.fromI32(0)
-  user.reservationCount = BigInt.fromI32(0)
-  user.reservationDayCount = BigInt.fromI32(0)
-  user.referralCount = BigInt.fromI32(0)
-  return user
 }
 
 function upsertTransaction(tx: ethereum.Transaction, block: ethereum.Block): Transaction | null {
