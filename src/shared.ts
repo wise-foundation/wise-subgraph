@@ -24,5 +24,6 @@ export function createUser(id: string): User | null {
   user.reservationCount = BigInt.fromI32(0)
   user.reservationDayCount = BigInt.fromI32(0)
   user.referralCount = BigInt.fromI32(0)
+  user.stakeCount = BigInt.fromI32(0)
   return user
 }
