@@ -15,6 +15,9 @@ type User @entity {
   referrals: [Referral!]! @derivedFrom(field: "referrer")
   reservedEth: BigInt!
   referredEth: BigInt!
+  reservationCount: BigInt!
+  reservationDayCount: BigInt!
+  referralCount: BigInt!
 }
 
 type Reservation @entity {
@@ -66,4 +69,13 @@ type GlobalReservationDaySnapshot @entity {
   totalRealAmount: BigInt!
   reservationCount: BigInt!
   userCount: BigInt!
+}
+
+type Global @entity {
+  id: ID!
+  userCount: BigInt!
+  reserverCount: BigInt!
+  referrerCount: BigInt!
+  cmReferrerCount: BigInt!
+  reservationCount: BigInt!
 }

@@ -13,7 +13,10 @@ import {
   GlobalReservationDaySnapshot,
   Referral,
   Transaction,
+  Global,
 } from "../generated/schema"
+
+let CM_REFERRER_THRESHOLD = BigInt.fromI32(50).times(BigInt.fromI32(10).pow(18))
 
 let NORMAL_SUPPLY = BigInt.fromI32(5000000).times(BigInt.fromI32(10).pow(18)),
   MAX_SUPPLY = NORMAL_SUPPLY.plus(NORMAL_SUPPLY),
@@ -44,13 +47,27 @@ function getMinSupply (day: BigInt): BigInt {
   }
 }
 
-function getOrCreateUser(id: string): User | null {
-  let user = User.load(id)
-  if (user == null) {
-    user = new User(id)
-    user.reservedEth = BigInt.fromI32(0)
-    user.referredEth = BigInt.fromI32(0)
+function getOrCreateGlobal(): Global | null {
+  let global = Global.load("0")
+  if (global == null) {
+    global = new Global("0")
+    global.userCount = BigInt.fromI32(0)
+    global.reserverCount = BigInt.fromI32(0)
+    global.referrerCount = BigInt.fromI32(0)
+    global.cmReferrerCount = BigInt.fromI32(0)
+    global.reservationCount = BigInt.fromI32(0)
+    global.save()
   }
+  return global
+}
+
+function createUser(id: string): User | null {
+  let user = new User(id)
+  user.reservedEth = BigInt.fromI32(0)
+  user.referredEth = BigInt.fromI32(0)
+  user.reservationCount = BigInt.fromI32(0)
+  user.reservationDayCount = BigInt.fromI32(0)
+  user.referralCount = BigInt.fromI32(0)
   return user
 }
 
@@ -68,13 +85,26 @@ function upsertTransaction(tx: ethereum.Transaction, block: ethereum.Block): Tra
 }
 
 export function handleReferralAdded(event: ReferralAdded): void {
+  let global = getOrCreateGlobal()
+
   let transaction = upsertTransaction(event.transaction, event.block)
 
   let referrerID = event.params.referral.toHexString()
-  let referrer = getOrCreateUser(referrerID)
+  let referrer = User.load(referrerID)
+  if (referrer == null) {
+    referrer = createUser(referrerID)
+    global.userCount = global.userCount.plus(BigInt.fromI32(1))
+  }
+  if (referrer.referralCount == BigInt.fromI32(0)) {
+    global.referrerCount = global.referrerCount.plus(BigInt.fromI32(1))
+  }
 
   let refereeID = event.params.referee.toHexString()
-  let referee = getOrCreateUser(refereeID)
+  let referee = User.load(refereeID)
+  if (referee == null) {
+    referee = createUser(refereeID)
+    global.userCount = global.userCount.plus(BigInt.fromI32(1))
+  }
   referee.save()
 
   let referralID = event.transaction.hash.toHexString()
@@ -86,8 +116,14 @@ export function handleReferralAdded(event: ReferralAdded): void {
   referral.amount = event.params.amount
   referral.save()
 
+  let wasBelowCm = referrer.referredEth < CM_REFERRER_THRESHOLD;
   referrer.referredEth = referrer.referredEth.plus(referral.amount)
+  referrer.referralCount = referrer.referralCount.plus(BigInt.fromI32(1))
   referrer.save()
+  if (wasBelowCm && referrer.referredEth >= CM_REFERRER_THRESHOLD) {
+    global.cmReferrerCount = global.cmReferrerCount.plus(BigInt.fromI32(1))
+  }
+  global.save()
 
   transaction.referral = referral.id
   transaction.save()
@@ -129,10 +165,21 @@ export function handleReferralAdded(event: ReferralAdded): void {
 }
 
 export function handleWiseReservation(event: WiseReservation): void {
+  let global = getOrCreateGlobal()
+  global.reservationCount = global.reservationCount.plus(BigInt.fromI32(1))
+
   let transaction = upsertTransaction(event.transaction, event.block)
 
   let userID = event.transaction.from.toHexString()
-  let user = getOrCreateUser(userID)
+  let user = User.load(userID)
+  if (user == null) {
+    user = createUser(userID)
+    global.userCount = global.userCount.plus(BigInt.fromI32(1))
+  }
+  if (user.reservationCount == BigInt.fromI32(0)) {
+    global.reserverCount = global.reserverCount.plus(BigInt.fromI32(1))
+  }
+  global.save()
 
   let reservationID = event.transaction.hash.toHexString() + "-" + event.params.investmentDay.toString()
   let reservation = new Reservation(reservationID)
@@ -145,8 +192,8 @@ export function handleWiseReservation(event: WiseReservation): void {
   reservation.referral = null
   reservation.save()
 
+  user.reservationCount = user.reservationCount.plus(BigInt.fromI32(1))
   user.reservedEth = user.reservedEth.plus(reservation.amount)
-  user.save()
 
   let gResDayID = reservation.investmentDay.toString()
   let gResDay = GlobalReservationDay.load(gResDayID)
@@ -182,6 +229,7 @@ export function handleWiseReservation(event: WiseReservation): void {
     uResDay.totalRealAmount = BigInt.fromI32(0)
     uResDay.reservationCount = BigInt.fromI32(0)
     gResDay.userCount = gResDay.userCount.plus(BigInt.fromI32(1))
+    user.reservationDayCount = user.reservationDayCount.plus(BigInt.fromI32(1))
   }
   uResDay.totalAmount = uResDay.totalAmount.plus(reservation.amount)
   uResDay.totalRealAmount = uResDay.totalRealAmount.plus(reservation.amount)
@@ -189,6 +237,8 @@ export function handleWiseReservation(event: WiseReservation): void {
   uResDay.save()
 
   gResDay.save()
+
+  user.save()
 
   gResDaySnapshot.userCount = gResDay.userCount
   gResDaySnapshot.save()
