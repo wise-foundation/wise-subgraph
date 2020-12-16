@@ -14,6 +14,7 @@ type User @entity {
   reservationDays: [UserReservationDay!]! @derivedFrom(field: "user")
   referrals: [Referral!]! @derivedFrom(field: "referrer")
   reservedEth: BigInt!
+  reservedRealEth: BigInt!
   referredEth: BigInt!
   reservationCount: BigInt!
   reservationDayCount: BigInt!

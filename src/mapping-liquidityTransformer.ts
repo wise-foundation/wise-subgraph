@@ -84,6 +84,8 @@ export function handleReferralAdded(event: ReferralAdded): void {
     referee = createUser(refereeID)
     global.userCount = global.userCount.plus(BigInt.fromI32(1))
   }
+  let reservedEffectiveEth = event.params.amount.times(BigInt.fromI32(11)).div(BigInt.fromI32(10))
+  referee.reservedRealEth = referee.reservedRealEth.plus(event.params.amount).minus(reservedEffectiveEth)
   referee.save()
 
   let referralID = event.transaction.hash.toHexString()
@@ -173,6 +175,7 @@ export function handleWiseReservation(event: WiseReservation): void {
 
   user.reservationCount = user.reservationCount.plus(BigInt.fromI32(1))
   user.reservedEth = user.reservedEth.plus(reservation.amount)
+  user.reservedRealEth = user.reservedRealEth.plus(reservation.amount)
 
   let gResDayID = reservation.investmentDay.toString()
   let gResDay = GlobalReservationDay.load(gResDayID)

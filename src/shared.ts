@@ -20,6 +20,7 @@ export function getOrCreateGlobal(): Global | null {
 export function createUser(id: string): User | null {
   let user = new User(id)
   user.reservedEth = BigInt.fromI32(0)
+  user.reservedRealEth = BigInt.fromI32(0)
   user.referredEth = BigInt.fromI32(0)
   user.reservationCount = BigInt.fromI32(0)
   user.reservationDayCount = BigInt.fromI32(0)
