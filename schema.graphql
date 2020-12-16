@@ -79,3 +79,7 @@ type Global @entity {
   cmReferrerCount: BigInt!
   reservationCount: BigInt!
 }
+
+type Stake @entity {
+  id: ID!
+}

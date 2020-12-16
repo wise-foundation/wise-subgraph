@@ -4,7 +4,7 @@ import {
   WiseReservation,
   GeneratedStaticSupply,
   GeneratedRandomSupply,
-} from "../generated/WiseLiquidityTransformer/LiquidityTransformer"
+} from "../generated/LiquidityTransformer/LiquidityTransformer"
 import {
   User,
   Reservation,

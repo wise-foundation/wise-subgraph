@@ -1,5 +1,11 @@
 {
   "network": "mainnet",
-  "liquidityTransformerAddress": "0xfef0d2f3a79b4338d8418003dd9df89281242063",
-  "startBlock": 11010573
+  "liquidityTransformer": {
+    "address": "0xfef0d2f3a79b4338d8418003dd9df89281242063",
+    "startBlock": 11010573
+  },
+  "wiseToken": {
+    "address": "0xDb4de4303295c0E7559449aB4d121bFB4EE235AE",
+    "startBlock": 11010573
+  }
 }

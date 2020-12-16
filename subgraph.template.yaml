@@ -3,12 +3,32 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: WiseLiquidityTransformer
+    name: WiseToken
     network: {{ network }}
     source:
-      address: '{{ liquidityTransformerAddress }}'
+      address: '{{ wiseToken.address }}'
+      abi: WiseToken
+      startBlock: {{ wiseToken.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Stake
+      abis:
+        - name: WiseToken
+          file: ./abis/WiseToken.json
+      eventHandlers:
+        - event: StakeStart(indexed bytes16,indexed address,indexed address,uint256,uint256,uint256,uint256,uint256,uint256)
+          handler: handleStakeStart
+      file: ./src/mapping-wiseToken.ts
+  - kind: ethereum/contract
+    name: LiquidityTransformer
+    network: {{ network }}
+    source:
+      address: '{{ liquidityTransformer.address }}'
       abi: LiquidityTransformer
-      startBlock: {{ startBlock }}
+      startBlock: {{ liquidityTransformer.startBlock }}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -32,4 +52,4 @@ dataSources:
           handler: handleGeneratedStaticSupply
         - event: GeneratedRandomSupply(indexed uint256,uint256)
           handler: handleGeneratedRandomSupply
-      file: ./src/mapping.ts
+      file: ./src/mapping-liquidityTransformer.ts
