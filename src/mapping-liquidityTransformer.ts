@@ -85,7 +85,8 @@ export function handleReferralAdded(event: ReferralAdded): void {
     global.userCount = global.userCount.plus(BigInt.fromI32(1))
   }
   let reservedEffectiveEth = event.params.amount.times(BigInt.fromI32(11)).div(BigInt.fromI32(10))
-  referee.reservedRealEth = referee.reservedRealEth.plus(event.params.amount).minus(reservedEffectiveEth)
+  referee.reservationActualWei = referee.reservationActualWei.plus(event.params.amount).minus(reservedEffectiveEth)
+  global.reservationActualWei = global.reservationActualWei.plus(event.params.amount).minus(reservedEffectiveEth)
   referee.save()
 
   let referralID = event.transaction.hash.toHexString()
@@ -94,14 +95,14 @@ export function handleReferralAdded(event: ReferralAdded): void {
   referral.timestamp = transaction.timestamp
   referral.referrer = referrer.id
   referral.referee = referee.id
-  referral.amount = event.params.amount
+  referral.actualWei = event.params.amount
   referral.save()
 
-  let wasBelowCm = referrer.referredEth < CM_REFERRER_THRESHOLD;
-  referrer.referredEth = referrer.referredEth.plus(referral.amount)
+  let wasBelowCm = referrer.referralActualWei < CM_REFERRER_THRESHOLD;
+  referrer.referralActualWei = referrer.referralActualWei.plus(referral.actualWei)
   referrer.referralCount = referrer.referralCount.plus(BigInt.fromI32(1))
   referrer.save()
-  if (wasBelowCm && referrer.referredEth >= CM_REFERRER_THRESHOLD) {
+  if (wasBelowCm && referrer.referralActualWei >= CM_REFERRER_THRESHOLD) {
     global.cmReferrerCount = global.cmReferrerCount.plus(BigInt.fromI32(1))
   }
   global.save()
@@ -120,27 +121,27 @@ export function handleReferralAdded(event: ReferralAdded): void {
   }
 
   let nRes = BigInt.fromI32(resList.length)
-  let dayRealAmount = referral.amount.div(nRes)
-  let remainder = referral.amount.mod(nRes)
+  let dayActualWei = referral.actualWei.div(nRes)
+  let remainder = referral.actualWei.mod(nRes)
   for (let i = 0; i < resList.length; i++) {
-    let realAmount = i === 0
-        ? dayRealAmount.plus(remainder)
-        : dayRealAmount
+    let actualWei = i === 0
+        ? dayActualWei.plus(remainder)
+        : dayActualWei
 
     let res = resList[i]
-    res.realAmount = realAmount
+    res.actualWei = actualWei
     res.save()
 
     let uResDay = UserReservationDay.load(res.user + "-" + res.investmentDay.toString())
-    uResDay.totalRealAmount = uResDay.totalRealAmount.plus(realAmount).minus(res.amount)
+    uResDay.actualWei = uResDay.actualWei.plus(res.actualWei).minus(res.effectiveWei)
     uResDay.save()
 
     let gResDay = GlobalReservationDay.load(res.investmentDay.toString())
-    gResDay.totalRealAmount = gResDay.totalRealAmount.plus(realAmount).minus(res.amount)
+    gResDay.actualWei = gResDay.actualWei.plus(res.actualWei).minus(res.effectiveWei)
     gResDay.save()
 
     let gResDaySnapshot = new GlobalReservationDaySnapshot(res.investmentDay.toString() + "-" + event.block.timestamp.toString())
-    gResDaySnapshot.totalRealAmount = gResDay.totalRealAmount
+    gResDaySnapshot.actualWei = gResDay.actualWei
     gResDaySnapshot.save()
   }
 }
@@ -160,7 +161,6 @@ export function handleWiseReservation(event: WiseReservation): void {
   if (user.reservationCount == BigInt.fromI32(0)) {
     global.reserverCount = global.reserverCount.plus(BigInt.fromI32(1))
   }
-  global.save()
 
   let reservationID = event.transaction.hash.toHexString() + "-" + event.params.investmentDay.toString()
   let reservation = new Reservation(reservationID)
@@ -168,14 +168,17 @@ export function handleWiseReservation(event: WiseReservation): void {
   reservation.timestamp = transaction.timestamp
   reservation.user = user.id
   reservation.investmentDay = event.params.investmentDay
-  reservation.amount = event.params.amount
-  reservation.realAmount = event.params.amount
+  reservation.effectiveWei = event.params.amount
+  reservation.actualWei = event.params.amount
   reservation.referral = null
   reservation.save()
 
   user.reservationCount = user.reservationCount.plus(BigInt.fromI32(1))
-  user.reservedEth = user.reservedEth.plus(reservation.amount)
-  user.reservedRealEth = user.reservedRealEth.plus(reservation.amount)
+  user.reservationEffectiveWei = user.reservationEffectiveWei.plus(reservation.effectiveWei)
+  user.reservationActualWei = user.reservationActualWei.plus(reservation.effectiveWei)
+  global.reservationEffectiveWei = global.reservationEffectiveWei.plus(reservation.effectiveWei)
+  global.reservationActualWei = global.reservationActualWei.plus(reservation.effectiveWei)
+  global.save()
 
   let gResDayID = reservation.investmentDay.toString()
   let gResDay = GlobalReservationDay.load(gResDayID)
@@ -184,21 +187,21 @@ export function handleWiseReservation(event: WiseReservation): void {
     gResDay.investmentDay = reservation.investmentDay
     gResDay.minSupply = getMinSupply(gResDay.investmentDay)
     gResDay.maxSupply = MAX_SUPPLY.minus(gResDay.minSupply)
-    gResDay.totalAmount = BigInt.fromI32(0)
-    gResDay.totalRealAmount = BigInt.fromI32(0)
+    gResDay.effectiveWei = BigInt.fromI32(0)
+    gResDay.actualWei = BigInt.fromI32(0)
     gResDay.reservationCount = BigInt.fromI32(0)
     gResDay.userCount = BigInt.fromI32(0)
   }
-  gResDay.totalAmount = gResDay.totalAmount.plus(reservation.amount)
-  gResDay.totalRealAmount = gResDay.totalRealAmount.plus(reservation.amount)
+  gResDay.effectiveWei = gResDay.effectiveWei.plus(reservation.effectiveWei)
+  gResDay.actualWei = gResDay.actualWei.plus(reservation.effectiveWei)
   gResDay.reservationCount = gResDay.reservationCount.plus(BigInt.fromI32(1))
 
   let gResDaySnapshotID = reservation.investmentDay.toString() + "-" + event.block.timestamp.toString()
   let gResDaySnapshot = new GlobalReservationDaySnapshot(gResDaySnapshotID)
   gResDaySnapshot.timestamp = event.block.timestamp
   gResDaySnapshot.investmentDay = gResDay.investmentDay
-  gResDaySnapshot.totalAmount = gResDay.totalAmount
-  gResDaySnapshot.totalRealAmount = gResDay.totalRealAmount
+  gResDaySnapshot.effectiveWei = gResDay.effectiveWei
+  gResDaySnapshot.actualWei = gResDay.actualWei
   gResDaySnapshot.reservationCount = gResDay.reservationCount
 
   let uResDayID = userID + "-" + reservation.investmentDay.toString()
@@ -207,14 +210,14 @@ export function handleWiseReservation(event: WiseReservation): void {
     uResDay = new UserReservationDay(uResDayID)
     uResDay.user = user.id
     uResDay.investmentDay = reservation.investmentDay
-    uResDay.totalAmount = BigInt.fromI32(0)
-    uResDay.totalRealAmount = BigInt.fromI32(0)
+    uResDay.effectiveWei = BigInt.fromI32(0)
+    uResDay.actualWei = BigInt.fromI32(0)
     uResDay.reservationCount = BigInt.fromI32(0)
     gResDay.userCount = gResDay.userCount.plus(BigInt.fromI32(1))
     user.reservationDayCount = user.reservationDayCount.plus(BigInt.fromI32(1))
   }
-  uResDay.totalAmount = uResDay.totalAmount.plus(reservation.amount)
-  uResDay.totalRealAmount = uResDay.totalRealAmount.plus(reservation.amount)
+  uResDay.effectiveWei = uResDay.effectiveWei.plus(reservation.effectiveWei)
+  uResDay.actualWei = uResDay.actualWei.plus(reservation.effectiveWei)
   uResDay.reservationCount = uResDay.reservationCount.plus(BigInt.fromI32(1))
   uResDay.save()
 

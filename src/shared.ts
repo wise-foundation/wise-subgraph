@@ -12,6 +12,8 @@ export function getOrCreateGlobal(): Global | null {
     global.reservationCount = BigInt.fromI32(0)
     global.stakeCount = BigInt.fromI32(0)
     global.stakerCount = BigInt.fromI32(0)
+    global.reservationEffectiveWei = BigInt.fromI32(0)
+    global.reservationActualWei = BigInt.fromI32(0)
     global.save()
   }
   return global
@@ -19,9 +21,9 @@ export function getOrCreateGlobal(): Global | null {
 
 export function createUser(id: string): User | null {
   let user = new User(id)
-  user.reservedEth = BigInt.fromI32(0)
-  user.reservedRealEth = BigInt.fromI32(0)
-  user.referredEth = BigInt.fromI32(0)
+  user.reservationEffectiveWei = BigInt.fromI32(0)
+  user.reservationActualWei = BigInt.fromI32(0)
+  user.referralActualWei = BigInt.fromI32(0)
   user.reservationCount = BigInt.fromI32(0)
   user.reservationDayCount = BigInt.fromI32(0)
   user.referralCount = BigInt.fromI32(0)
