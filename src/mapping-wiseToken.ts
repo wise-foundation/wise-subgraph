@@ -20,6 +20,7 @@ export function handleGiveStatus (call: GiveStatusCall): void {
 
   let global = getOrCreateGlobal()
   global.cmStatusCount = global.cmStatusCount.plus(ONE)
+  global.save()
 }
 
 export function handleStakeStart (event: StakeStart): void {
