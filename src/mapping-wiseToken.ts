@@ -2,6 +2,7 @@ import { BigInt, ethereum } from "@graphprotocol/graph-ts"
 import {
   getOrCreateGlobal,
   createUser,
+  ZERO,
   ONE,
 } from "./shared"
 import {
@@ -14,13 +15,17 @@ import {
 } from "../generated/schema"
 
 export function handleGiveStatus (call: GiveStatusCall): void {
-  let referrer = new User(call.inputs._referrer.toHex())
-  referrer.cmStatus = true
-  referrer.save()
+  let referrer = createUser(call.inputs._referrer.toHex())
+  if (referrer.cmStatus === false) {
+    referrer.cmStatus = true
+    referrer.cmStatusInLaunch = true
+    referrer.save()
 
-  let global = getOrCreateGlobal()
-  global.cmStatusCount = global.cmStatusCount.plus(ONE)
-  global.save()
+    let global = getOrCreateGlobal()
+    global.cmStatusCount = global.cmStatusCount.plus(ONE)
+    global.cmStatusInLaunchCount = global.cmStatusInLaunchCount.plus(ONE)
+    global.save()
+  }
 }
 
 export function handleStakeStart (event: StakeStart): void {
@@ -42,6 +47,12 @@ export function handleStakeStart (event: StakeStart): void {
   if (referrer == null) {
     referrer = createUser(referrerID)
     global.userCount = global.userCount.plus(ONE)
+  }
+  if (event.params.referralShares.gt(ZERO)) {
+    if (referrer.cmStatus === false) {
+      global.cmStatusCount = global.cmStatusCount.plus(ONE)
+    }
+    referrer.cmStatus = true
   }
   referrer.save()
   global.save()

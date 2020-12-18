@@ -105,11 +105,13 @@ export function handleReferralAdded(event: ReferralAdded): void {
   let wasBelowCm = referrer.reservationReferralActualWei < CM_REFERRER_THRESHOLD
   referrer.reservationReferralActualWei = referrer.reservationReferralActualWei.plus(referral.actualWei)
   referrer.reservationReferralCount = referrer.reservationReferralCount.plus(ONE)
-  referrer.save()
-  if (wasBelowCm && referrer.reservationReferralActualWei >= CM_REFERRER_THRESHOLD) {
+  if (wasBelowCm && referrer.reservationReferralActualWei >= CM_REFERRER_THRESHOLD && referrer.cmStatus === false) {
+    referrer.cmStatus = true
     referrer.cmStatusInLaunch = true
+    global.cmStatusCount = global.cmStatusCount.plus(ONE)
     global.cmStatusInLaunchCount = global.cmStatusInLaunchCount.plus(ONE)
   }
+  referrer.save()
   global.save()
 
   transaction.referral = referral.id
