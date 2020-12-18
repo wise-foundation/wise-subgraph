@@ -2,6 +2,9 @@ import { BigInt, ethereum } from "@graphprotocol/graph-ts"
 import {
   getOrCreateGlobal,
   createUser,
+  ZERO,
+  ONE,
+  ethVal,
 } from "./shared"
 import {
   ReferralAdded,
@@ -15,20 +18,20 @@ import {
   UserReservationDay,
   GlobalReservationDay,
   GlobalReservationDaySnapshot,
-  Referral,
+  ReservationReferral,
   Transaction,
 } from "../generated/schema"
 
-let CM_REFERRER_THRESHOLD = BigInt.fromI32(50).times(BigInt.fromI32(10).pow(18))
+let CM_REFERRER_THRESHOLD = ethVal(50)
 
-let NORMAL_SUPPLY = BigInt.fromI32(5000000).times(BigInt.fromI32(10).pow(18)),
+let NORMAL_SUPPLY = ethVal(5000000),
   MAX_SUPPLY = NORMAL_SUPPLY.plus(NORMAL_SUPPLY),
-  MIN_SUPPLY_1 = BigInt.fromI32(4500000).times(BigInt.fromI32(10).pow(18)),
-  MIN_SUPPLY_2 = BigInt.fromI32(4000000).times(BigInt.fromI32(10).pow(18)),
-  MIN_SUPPLY_3 = BigInt.fromI32(3500000).times(BigInt.fromI32(10).pow(18)),
-  MIN_SUPPLY_4 = BigInt.fromI32(3000000).times(BigInt.fromI32(10).pow(18)),
-  MIN_SUPPLY_5 = BigInt.fromI32(2500000).times(BigInt.fromI32(10).pow(18)),
-  MIN_SUPPLY_6 = BigInt.fromI32(1).times(BigInt.fromI32(10).pow(18))
+  MIN_SUPPLY_1 = ethVal(4500000),
+  MIN_SUPPLY_2 = ethVal(4000000),
+  MIN_SUPPLY_3 = ethVal(3500000),
+  MIN_SUPPLY_4 = ethVal(3000000),
+  MIN_SUPPLY_5 = ethVal(2500000),
+  MIN_SUPPLY_6 = ethVal(1)
 
 function getMinSupply (day: BigInt): BigInt {
   let dayVal = day.toI32()
@@ -72,17 +75,18 @@ export function handleReferralAdded(event: ReferralAdded): void {
   let referrer = User.load(referrerID)
   if (referrer == null) {
     referrer = createUser(referrerID)
-    global.userCount = global.userCount.plus(BigInt.fromI32(1))
+    global.userCount = global.userCount.plus(ONE)
   }
-  if (referrer.referralCount == BigInt.fromI32(0)) {
-    global.referrerCount = global.referrerCount.plus(BigInt.fromI32(1))
+  // TODO refactor more == and maybe other operators
+  if (referrer.reservationReferralCount.equals(ZERO)) {
+    global.reservationReferrerCount = global.reservationReferrerCount.plus(ONE)
   }
 
   let refereeID = event.params.referee.toHexString()
   let referee = User.load(refereeID)
   if (referee == null) {
     referee = createUser(refereeID)
-    global.userCount = global.userCount.plus(BigInt.fromI32(1))
+    global.userCount = global.userCount.plus(ONE)
   }
   let reservedEffectiveEth = event.params.amount.times(BigInt.fromI32(11)).div(BigInt.fromI32(10))
   referee.reservationActualWei = referee.reservationActualWei.plus(event.params.amount).minus(reservedEffectiveEth)
@@ -90,7 +94,7 @@ export function handleReferralAdded(event: ReferralAdded): void {
   referee.save()
 
   let referralID = event.transaction.hash.toHexString()
-  let referral = new Referral(referralID)
+  let referral = new ReservationReferral(referralID)
   referral.transaction = transaction.id
   referral.timestamp = transaction.timestamp
   referral.referrer = referrer.id
@@ -98,13 +102,13 @@ export function handleReferralAdded(event: ReferralAdded): void {
   referral.actualWei = event.params.amount
   referral.save()
 
-  let wasBelowCm = referrer.referralActualWei < CM_REFERRER_THRESHOLD;
-  referrer.referralActualWei = referrer.referralActualWei.plus(referral.actualWei)
-  referrer.referralCount = referrer.referralCount.plus(BigInt.fromI32(1))
+  let wasBelowCm = referrer.reservationReferralActualWei < CM_REFERRER_THRESHOLD
+  referrer.reservationReferralActualWei = referrer.reservationReferralActualWei.plus(referral.actualWei)
+  referrer.reservationReferralCount = referrer.reservationReferralCount.plus(ONE)
   referrer.save()
-  if (wasBelowCm && referrer.referralActualWei >= CM_REFERRER_THRESHOLD) {
+  if (wasBelowCm && referrer.reservationReferralActualWei >= CM_REFERRER_THRESHOLD) {
     referrer.cmStatusInLaunch = true
-    global.cmStatusInLaunchCount = global.cmStatusInLaunchCount.plus(BigInt.fromI32(1))
+    global.cmStatusInLaunchCount = global.cmStatusInLaunchCount.plus(ONE)
   }
   global.save()
 
@@ -118,6 +122,7 @@ export function handleReferralAdded(event: ReferralAdded): void {
     let reservation = Reservation.load(resID)
     if (reservation != null) {
       resList.push(reservation)
+      // TODO populate reservation.referral and save?  Too costly?
     }
   }
 
@@ -149,7 +154,7 @@ export function handleReferralAdded(event: ReferralAdded): void {
 
 export function handleWiseReservation(event: WiseReservation): void {
   let global = getOrCreateGlobal()
-  global.reservationCount = global.reservationCount.plus(BigInt.fromI32(1))
+  global.reservationCount = global.reservationCount.plus(ONE)
 
   let transaction = upsertTransaction(event.transaction, event.block)
 
@@ -157,10 +162,10 @@ export function handleWiseReservation(event: WiseReservation): void {
   let user = User.load(userID)
   if (user == null) {
     user = createUser(userID)
-    global.userCount = global.userCount.plus(BigInt.fromI32(1))
+    global.userCount = global.userCount.plus(ONE)
   }
-  if (user.reservationCount == BigInt.fromI32(0)) {
-    global.reserverCount = global.reserverCount.plus(BigInt.fromI32(1))
+  if (user.reservationCount == ZERO) {
+    global.reserverCount = global.reserverCount.plus(ONE)
   }
 
   let reservationID = event.transaction.hash.toHexString() + "-" + event.params.investmentDay.toString()
@@ -174,7 +179,7 @@ export function handleWiseReservation(event: WiseReservation): void {
   reservation.referral = null
   reservation.save()
 
-  user.reservationCount = user.reservationCount.plus(BigInt.fromI32(1))
+  user.reservationCount = user.reservationCount.plus(ONE)
   user.reservationEffectiveWei = user.reservationEffectiveWei.plus(reservation.effectiveWei)
   user.reservationActualWei = user.reservationActualWei.plus(reservation.effectiveWei)
   global.reservationEffectiveWei = global.reservationEffectiveWei.plus(reservation.effectiveWei)
@@ -188,14 +193,14 @@ export function handleWiseReservation(event: WiseReservation): void {
     gResDay.investmentDay = reservation.investmentDay
     gResDay.minSupply = getMinSupply(gResDay.investmentDay)
     gResDay.maxSupply = MAX_SUPPLY.minus(gResDay.minSupply)
-    gResDay.effectiveWei = BigInt.fromI32(0)
-    gResDay.actualWei = BigInt.fromI32(0)
-    gResDay.reservationCount = BigInt.fromI32(0)
-    gResDay.userCount = BigInt.fromI32(0)
+    gResDay.effectiveWei = ZERO
+    gResDay.actualWei = ZERO
+    gResDay.reservationCount = ZERO
+    gResDay.userCount = ZERO
   }
   gResDay.effectiveWei = gResDay.effectiveWei.plus(reservation.effectiveWei)
   gResDay.actualWei = gResDay.actualWei.plus(reservation.effectiveWei)
-  gResDay.reservationCount = gResDay.reservationCount.plus(BigInt.fromI32(1))
+  gResDay.reservationCount = gResDay.reservationCount.plus(ONE)
 
   let gResDaySnapshotID = reservation.investmentDay.toString() + "-" + event.block.timestamp.toString()
   let gResDaySnapshot = new GlobalReservationDaySnapshot(gResDaySnapshotID)
@@ -211,15 +216,15 @@ export function handleWiseReservation(event: WiseReservation): void {
     uResDay = new UserReservationDay(uResDayID)
     uResDay.user = user.id
     uResDay.investmentDay = reservation.investmentDay
-    uResDay.effectiveWei = BigInt.fromI32(0)
-    uResDay.actualWei = BigInt.fromI32(0)
-    uResDay.reservationCount = BigInt.fromI32(0)
-    gResDay.userCount = gResDay.userCount.plus(BigInt.fromI32(1))
-    user.reservationDayCount = user.reservationDayCount.plus(BigInt.fromI32(1))
+    uResDay.effectiveWei = ZERO
+    uResDay.actualWei = ZERO
+    uResDay.reservationCount = ZERO
+    gResDay.userCount = gResDay.userCount.plus(ONE)
+    user.reservationDayCount = user.reservationDayCount.plus(ONE)
   }
   uResDay.effectiveWei = uResDay.effectiveWei.plus(reservation.effectiveWei)
   uResDay.actualWei = uResDay.actualWei.plus(reservation.effectiveWei)
-  uResDay.reservationCount = uResDay.reservationCount.plus(BigInt.fromI32(1))
+  uResDay.reservationCount = uResDay.reservationCount.plus(ONE)
   uResDay.save()
 
   gResDay.save()
@@ -241,75 +246,3 @@ export function handleGeneratedRandomSupply(event: GeneratedRandomSupply): void 
   day.supply = event.params.randomSupply
   day.save()
 }
-
-/*
-  // Entities can be loaded from the store using a string ID this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
-
-  // Entities only exist after they have been saved to the store
-  // `null` checks allow to create entities on demand
-  if (entity == null) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
-  }
-
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
-
-  // Entity fields can be set based on event parameters
-  entity.investmentDay = event.params.investmentDay
-  entity.randomSupply = event.params.randomSupply
-
-  // Entities can be written to the store with `.save()`
-  entity.save()
-
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
-
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.REFUND_SPONSOR(...)
-  // - contract.TOKEN_DEFINER(...)
-  // - contract.UNISWAP_PAIR(...)
-  // - contract.UNISWAP_ROUTER(...)
-  // - contract.WISE_CONTRACT(...)
-  // - contract._currentWiseDay(...)
-  // - contract.dailyTotalInvestment(...)
-  // - contract.dailyTotalSupply(...)
-  // - contract.fundedDays(...)
-  // - contract.g(...)
-  // - contract.investmentsOnAllDays(...)
-  // - contract.investorAccountCount(...)
-  // - contract.investorAccounts(...)
-  // - contract.investorBalances(...)
-  // - contract.investorTotalBalance(...)
-  // - contract.investorsOnAllDays(...)
-  // - contract.investorsOnDay(...)
-  // - contract.myInvestmentAmount(...)
-  // - contract.myInvestmentAmountAllDays(...)
-  // - contract.myTotalInvestmentAmount(...)
-  // - contract.payoutInvestorAddress(...)
-  // - contract.payoutReferralAddress(...)
-  // - contract.referralAccountCount(...)
-  // - contract.referralAccounts(...)
-  // - contract.referralAmount(...)
-  // - contract.referralTokens(...)
-  // - contract.requestRefund(...)
-  // - contract.supplyOnAllDays(...)
-  // - contract.uniqueInvestorCount(...)
-  // - contract.uniqueInvestors(...)
-}
- */

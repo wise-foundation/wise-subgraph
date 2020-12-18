@@ -3,7 +3,7 @@ type Transaction @entity {
   blockNumber: BigInt!
   timestamp: BigInt!
   sender: User!
-  referral: Referral
+  referral: ReservationReferral
   reservations: [Reservation!]! @derivedFrom(field: "transaction")
 }
 
@@ -12,13 +12,13 @@ type User @entity {
   transactions: [Transaction!]! @derivedFrom(field: "sender")
   reservations: [Reservation!]! @derivedFrom(field: "user")
   reservationDays: [UserReservationDay!]! @derivedFrom(field: "user")
-  referrals: [Referral!]! @derivedFrom(field: "referrer")
   reservationEffectiveWei: BigInt!
   reservationActualWei: BigInt!
-  referralActualWei: BigInt!
   reservationCount: BigInt!
   reservationDayCount: BigInt!
-  referralCount: BigInt!
+  reservationReferrals: [ReservationReferral!]! @derivedFrom(field: "referrer")
+  reservationReferralActualWei: BigInt!
+  reservationReferralCount: BigInt!
   stakeCount: BigInt!
   cmStatus: Boolean!
   cmStatusInLaunch: Boolean!
@@ -32,10 +32,10 @@ type Reservation @entity {
   investmentDay: BigInt!
   effectiveWei: BigInt!
   actualWei: BigInt!
-  referral: Referral
+  referral: ReservationReferral
 }
 
-type Referral @entity {
+type ReservationReferral @entity {
   id: ID!
   transaction: Transaction!
   timestamp: BigInt!
@@ -79,14 +79,14 @@ type Global @entity {
   id: ID!
   userCount: BigInt!
   reserverCount: BigInt!
-  referrerCount: BigInt!
+  reservationReferrerCount: BigInt!
   cmStatusCount: BigInt!
   cmStatusInLaunchCount: BigInt!
   reservationCount: BigInt!
-  stakeCount: BigInt!
-  stakerCount: BigInt!
   reservationEffectiveWei: BigInt!
   reservationActualWei: BigInt!
+  stakeCount: BigInt!
+  stakerCount: BigInt!
 }
 
 type Stake @entity {
