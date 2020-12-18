@@ -1,14 +1,18 @@
 import {BigInt} from "@graphprotocol/graph-ts/index";
 import {Global, User} from "../generated/schema";
 
+export const ZERO = BigInt.fromI32(0)
+export const ONE = BigInt.fromI32(1)
+
 export function getOrCreateGlobal(): Global | null {
   let global = Global.load("0")
   if (global == null) {
     global = new Global("0")
-    global.userCount = BigInt.fromI32(0)
+    global.userCount = ZERO
     global.reserverCount = BigInt.fromI32(0)
     global.referrerCount = BigInt.fromI32(0)
-    global.cmReferrerCount = BigInt.fromI32(0)
+    global.cmStatusCount = BigInt.fromI32(0)
+    global.cmStatusInLaunchCount = BigInt.fromI32(0)
     global.reservationCount = BigInt.fromI32(0)
     global.stakeCount = BigInt.fromI32(0)
     global.stakerCount = BigInt.fromI32(0)
@@ -28,5 +32,7 @@ export function createUser(id: string): User | null {
   user.reservationDayCount = BigInt.fromI32(0)
   user.referralCount = BigInt.fromI32(0)
   user.stakeCount = BigInt.fromI32(0)
+  user.cmStatus = false
+  user.cmStatusInLaunch = false
   return user
 }

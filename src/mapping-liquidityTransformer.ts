@@ -1,7 +1,7 @@
 import { BigInt, ethereum } from "@graphprotocol/graph-ts"
 import {
   getOrCreateGlobal,
-  createUser
+  createUser,
 } from "./shared"
 import {
   ReferralAdded,
@@ -103,7 +103,8 @@ export function handleReferralAdded(event: ReferralAdded): void {
   referrer.referralCount = referrer.referralCount.plus(BigInt.fromI32(1))
   referrer.save()
   if (wasBelowCm && referrer.referralActualWei >= CM_REFERRER_THRESHOLD) {
-    global.cmReferrerCount = global.cmReferrerCount.plus(BigInt.fromI32(1))
+    referrer.cmStatusInLaunch = true
+    global.cmStatusInLaunchCount = global.cmStatusInLaunchCount.plus(BigInt.fromI32(1))
   }
   global.save()
 

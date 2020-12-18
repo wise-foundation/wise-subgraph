@@ -20,6 +20,8 @@ type User @entity {
   reservationDayCount: BigInt!
   referralCount: BigInt!
   stakeCount: BigInt!
+  cmStatus: Boolean!
+  cmStatusInLaunch: Boolean!
 }
 
 type Reservation @entity {
@@ -78,7 +80,8 @@ type Global @entity {
   userCount: BigInt!
   reserverCount: BigInt!
   referrerCount: BigInt!
-  cmReferrerCount: BigInt!
+  cmStatusCount: BigInt!
+  cmStatusInLaunchCount: BigInt!
   reservationCount: BigInt!
   stakeCount: BigInt!
   stakerCount: BigInt!

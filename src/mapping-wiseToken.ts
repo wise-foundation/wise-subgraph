@@ -1,15 +1,25 @@
 import { BigInt, ethereum } from "@graphprotocol/graph-ts"
 import {
   getOrCreateGlobal,
-  createUser
+  createUser,
 } from "./shared"
 import {
-  StakeStart
+  GiveStatusCall,
+  StakeStart,
 } from "../generated/WiseToken/WiseToken"
 import {
   Stake,
-  User
+  User,
 } from "../generated/schema"
+
+export function handleGiveStatus (call: GiveStatusCall): void {
+  let referrer = new User(call.inputs._referrer.toHex())
+  referrer.cmStatus = true
+  referrer.save()
+
+  let global = getOrCreateGlobal();
+  global.cmStatusCount = global.cmStatusCount.plus(BigInt.fromI32(1))
+}
 
 export function handleStakeStart (event: StakeStart): void {
   let global = getOrCreateGlobal();

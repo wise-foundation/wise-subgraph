@@ -21,6 +21,9 @@ dataSources:
       eventHandlers:
         - event: StakeStart(indexed bytes16,indexed address,indexed address,uint256,uint256,uint256,uint256,uint256,uint256)
           handler: handleStakeStart
+      callHandlers:
+        - function: giveStatus(address)
+          handler:  handleGiveStatus
       file: ./src/mapping-wiseToken.ts
   - kind: ethereum/contract
     name: LiquidityTransformer
