@@ -21,6 +21,10 @@ dataSources:
       eventHandlers:
         - event: StakeStart(indexed bytes16,indexed address,indexed address,uint256,uint256,uint256,uint256,uint256,uint256)
           handler: handleStakeStart
+        - event: StakeEnd(indexed bytes16,indexed address,indexed address,uint256,uint256,uint256,uint256,uint256,uint256)
+          handler: handleStakeEnd
+        - event: InterestScraped(indexed bytes16,indexed address,uint256,uint256,uint256,uint256,uint256)
+          handler: handleInterestScraped
       callHandlers:
         - function: giveStatus(address)
           handler:  handleGiveStatus

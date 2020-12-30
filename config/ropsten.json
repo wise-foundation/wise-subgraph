@@ -1,11 +1,11 @@
 {
   "network": "ropsten",
   "liquidityTransformer": {
-    "address": "0xC4dA529E611a8b1B62dFde4037e606BA2Bce339F",
-    "startBlock": 9251263
+    "address": "0x156d7b05f70fe870c83bf5eda1f987cca44e8a96",
+    "startBlock": 9312612
   },
   "wiseToken": {
-    "address": "0xDb4de4303295c0E7559449aB4d121bFB4EE235AE",
-    "startBlock": 9251234
+    "address": "0xa89Cb3AA23F7d85DEF5dCCdb73450aE236AFEe61",
+    "startBlock": 9312570
   }
 }

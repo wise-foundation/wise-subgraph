@@ -139,9 +139,15 @@
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "stakeID",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "oldSharePrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "currentWiseDay",
+        "type": "uint64"
       }
     ],
     "name": "NewSharePrice",
@@ -1527,6 +1533,30 @@
       }
     ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes16",
+        "name": "",
+        "type": "bytes16"
+      }
+    ],
+    "name": "scrapes",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

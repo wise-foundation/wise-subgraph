@@ -8,6 +8,8 @@ import {
 import {
   GiveStatusCall,
   StakeStart,
+  StakeEnd,
+  InterestScraped,
 } from "../generated/WiseToken/WiseToken"
 import {
   Stake,
@@ -72,4 +74,16 @@ export function handleStakeStart (event: StakeStart): void {
   stake.lockDays = event.params.lockDays
   stake.daiEquivalent = event.params.daiEquivalent
   stake.save()
+}
+
+export function handleStakeEnd (event: StakeEnd): void {
+  let stake = new Stake(event.params.stakeID.toHexString())
+  stake.closeDay = event.params.closeDay
+  stake.penalty = event.params.penaltyAmount
+  stake.reward = event.params.rewardAmount
+  stake.save()
+}
+
+export function handleInterestScraped (event: InterestScraped): void {
+
 }

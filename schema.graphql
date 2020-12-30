@@ -19,6 +19,8 @@ type User @entity {
   reservationReferrals: [ReservationReferral!]! @derivedFrom(field: "referrer")
   reservationReferralActualWei: BigInt!
   reservationReferralCount: BigInt!
+  stakes: [Stake!]! @derivedFrom(field: "staker")
+  stakeReferrals: [Stake!]! @derivedFrom(field: "referrer")
   stakeCount: BigInt!
   cmStatus: Boolean!
   cmStatusInLaunch: Boolean!
@@ -96,10 +98,14 @@ type Stake @entity {
   principal: BigInt!
   shares: BigInt!
   cmShares: BigInt!
+  currentShares: BigInt!
   startDay: BigInt!
   lockDays: BigInt!
   daiEquivalent: BigInt!
   reward: BigInt
   closeDay: BigInt
   penalty: BigInt
+  scraped: BigInt
+  sharesPenalized: BigInt
+  referrerSharesPenalized: BigInt
 }
