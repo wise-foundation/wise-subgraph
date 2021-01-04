@@ -108,4 +108,7 @@ type Stake @entity {
   scraped: BigInt
   sharesPenalized: BigInt
   referrerSharesPenalized: BigInt
+  scrapeCount: BigInt
+  scrapedTotalYodas: BigInt
+  lastScrapeDay: BigInt
 }

@@ -70,6 +70,7 @@ export function handleStakeStart (event: StakeStart): void {
   stake.principal = event.params.stakedAmount
   stake.shares = event.params.stakesShares
   stake.cmShares = event.params.referralShares
+  stake.currentShares = event.params.stakesShares
   stake.startDay = event.params.startDay
   stake.lockDays = event.params.lockDays
   stake.daiEquivalent = event.params.daiEquivalent
@@ -85,5 +86,12 @@ export function handleStakeEnd (event: StakeEnd): void {
 }
 
 export function handleInterestScraped (event: InterestScraped): void {
-
+  let stake = Stake.load(event.params.stakerAddress.toHexString())
+  stake.scrapeCount = stake.scrapeCount + ONE
+  stake.lastScrapeDay = event.params.scrapeDay
+  stake.scrapedTotalYodas = stake.scrapedTotalYodas + event.params.scrapeAmount
+  stake.currentShares = stake.currentShares - event.params.stakersPenalty
+  stake.sharesPenalized = stake.sharesPenalized + event.params.stakersPenalty
+  stake.referrerSharesPenalized = stake.referrerSharesPenalized + event.params.referrerPenalty
+  stake.save()
 }
