@@ -7,5 +7,9 @@
   "wiseToken": {
     "address": "0xa89Cb3AA23F7d85DEF5dCCdb73450aE236AFEe61",
     "startBlock": 9312570
+  },
+  "refundSponsor": {
+    "address": "0xc3FC68dDdB1bf4Cb61307eEf89729DC317f2325a",
+    "startBlock": 11576737
   }
 }

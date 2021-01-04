@@ -60,3 +60,23 @@ dataSources:
         - event: GeneratedRandomSupply(indexed uint256,uint256)
           handler: handleGeneratedRandomSupply
       file: ./src/mapping-liquidityTransformer.ts
+  - kind: ethereum/contract
+    name: RefundSponsor
+    network: {{ network }}
+    source:
+      address: '{{ refundSponsor.address }}'
+      abi: RefundSponsor
+      startBlock: {{ refundSponsor.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - User
+      abis:
+        - name: RefundSponsor
+          file: ./abis/RefundSponsor.json
+      eventHandlers:
+        - event: RefundIssued(address,uint256)
+          handler: handleRefundIssued
+      file: ./src/mapping-refundSponsor.ts

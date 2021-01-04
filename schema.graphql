@@ -24,6 +24,7 @@ type User @entity {
   stakeCount: BigInt!
   cmStatus: Boolean!
   cmStatusInLaunch: Boolean!
+  gasRefunded: BigInt!
 }
 
 type Reservation @entity {

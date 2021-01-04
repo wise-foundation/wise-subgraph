@@ -39,5 +39,6 @@ export function createUser(id: string): User | null {
   user.stakeCount = ZERO
   user.cmStatus = false
   user.cmStatusInLaunch = false
+  user.gasRefunded = ZERO
   return user
 }
