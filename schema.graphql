@@ -103,13 +103,13 @@ type Stake @entity {
   startDay: BigInt!
   lockDays: BigInt!
   daiEquivalent: BigInt!
-  reward: BigInt
-  closeDay: BigInt
-  penalty: BigInt
-  scraped: BigInt
-  sharesPenalized: BigInt
-  referrerSharesPenalized: BigInt
-  scrapeCount: BigInt
-  scrapedTotalYodas: BigInt
-  lastScrapeDay: BigInt
+  reward: BigInt!
+  closeDay: BigInt!
+  penalty: BigInt!
+  scraped: BigInt!
+  sharesPenalized: BigInt!
+  referrerSharesPenalized: BigInt!
+  scrapeCount: BigInt!
+  scrapedTotalYodas: BigInt!
+  lastScrapeDay: BigInt!
 }

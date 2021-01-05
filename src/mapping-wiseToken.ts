@@ -74,6 +74,15 @@ export function handleStakeStart (event: StakeStart): void {
   stake.startDay = event.params.startDay
   stake.lockDays = event.params.lockDays
   stake.daiEquivalent = event.params.daiEquivalent
+  stake.reward = null
+  stake.closeDay = null
+  stake.penalty = null
+  stake.scraped = ZERO
+  stake.sharesPenalized = ZERO
+  stake.referrerSharesPenalized = ZERO
+  stake.scrapeCount = ZERO
+  stake.scrapedTotalYodas = ZERO
+  stake.lastScrapeDay = null
   stake.save()
 }
 
