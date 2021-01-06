@@ -96,11 +96,11 @@ export function handleStakeEnd (event: StakeEnd): void {
 
 export function handleInterestScraped (event: InterestScraped): void {
   let stake = Stake.load(event.params.stakerAddress.toHexString())
-  stake.scrapeCount = stake.scrapeCount + ONE
+  stake.scrapeCount = stake.scrapeCount.plus(ONE)
   stake.lastScrapeDay = event.params.scrapeDay
-  stake.scrapedTotalYodas = stake.scrapedTotalYodas + event.params.scrapeAmount
-  stake.currentShares = stake.currentShares - event.params.stakersPenalty
-  stake.sharesPenalized = stake.sharesPenalized + event.params.stakersPenalty
-  stake.referrerSharesPenalized = stake.referrerSharesPenalized + event.params.referrerPenalty
+  stake.scrapedTotalYodas = stake.scrapedTotalYodas.plus(event.params.scrapeAmount)
+  stake.currentShares = stake.currentShares.minus(event.params.stakersPenalty)
+  stake.sharesPenalized = stake.sharesPenalized.plus(event.params.stakersPenalty)
+  stake.referrerSharesPenalized = stake.referrerSharesPenalized.plus(event.params.referrerPenalty)
   stake.save()
 }
