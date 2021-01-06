@@ -19,10 +19,21 @@ export function getOrCreateGlobal(): Global | null {
     global.cmStatusCount = ZERO
     global.cmStatusInLaunchCount = ZERO
     global.reservationCount = ZERO
-    global.stakeCount = ZERO
-    global.stakerCount = ZERO
     global.reservationEffectiveWei = ZERO
     global.reservationActualWei = ZERO
+    global.stakeCount = ZERO
+    global.stakerCount = ZERO
+    global.totalShares = ZERO
+    global.totalStaked = ZERO
+    global.sharePrice = null
+    global.sharePricePrevious = null
+    global.referrerShares = ZERO
+    global.currentWiseDay = null
+    global.ownerlessSupply = ZERO
+    global.circulatingSupply = ZERO
+    global.liquidSupply = ZERO
+    global.mintedSupply = ZERO
+    global.ownedSupply = ZERO
     global.save()
   }
   return global

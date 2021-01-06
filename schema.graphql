@@ -90,6 +90,17 @@ type Global @entity {
   reservationActualWei: BigInt!
   stakeCount: BigInt!
   stakerCount: BigInt!
+  totalShares: BigInt!
+  totalStaked: BigInt!
+  sharePrice: BigInt
+  sharePricePrevious: BigInt
+  referrerShares: BigInt!
+  currentWiseDay: BigInt
+  ownerlessSupply: BigInt!
+  circulatingSupply: BigInt!
+  liquidSupply: BigInt!
+  mintedSupply: BigInt!
+  ownedSupply: BigInt!
 }
 
 type Stake @entity {
@@ -103,13 +114,12 @@ type Stake @entity {
   startDay: BigInt!
   lockDays: BigInt!
   daiEquivalent: BigInt!
-  reward: BigInt!
-  closeDay: BigInt!
-  penalty: BigInt!
-  scraped: BigInt!
+  reward: BigInt
+  closeDay: BigInt
+  penalty: BigInt
+  scrapedYodas: BigInt!
   sharesPenalized: BigInt!
   referrerSharesPenalized: BigInt!
   scrapeCount: BigInt!
-  scrapedTotalYodas: BigInt!
-  lastScrapeDay: BigInt!
+  lastScrapeDay: BigInt
 }

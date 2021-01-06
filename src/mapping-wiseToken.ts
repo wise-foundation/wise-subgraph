@@ -1,4 +1,3 @@
-import { BigInt, ethereum } from "@graphprotocol/graph-ts"
 import {
   getOrCreateGlobal,
   createUser,
@@ -10,6 +9,9 @@ import {
   StakeStart,
   StakeEnd,
   InterestScraped,
+  NewGlobals,
+  NewSharePrice,
+  WiseToken,
 } from "../generated/WiseToken/WiseToken"
 import {
   Stake,
@@ -77,11 +79,10 @@ export function handleStakeStart (event: StakeStart): void {
   stake.reward = null
   stake.closeDay = null
   stake.penalty = null
-  stake.scraped = ZERO
+  stake.scrapedYodas = ZERO
   stake.sharesPenalized = ZERO
   stake.referrerSharesPenalized = ZERO
   stake.scrapeCount = ZERO
-  stake.scrapedTotalYodas = ZERO
   stake.lastScrapeDay = null
   stake.save()
 }
@@ -95,12 +96,35 @@ export function handleStakeEnd (event: StakeEnd): void {
 }
 
 export function handleInterestScraped (event: InterestScraped): void {
-  let stake = Stake.load(event.params.stakerAddress.toHexString())
+  let stake = Stake.load(event.params.stakeID.toHexString())
   stake.scrapeCount = stake.scrapeCount.plus(ONE)
   stake.lastScrapeDay = event.params.scrapeDay
-  stake.scrapedTotalYodas = stake.scrapedTotalYodas.plus(event.params.scrapeAmount)
+  stake.scrapedYodas = stake.scrapedYodas.plus(event.params.scrapeAmount)
   stake.currentShares = stake.currentShares.minus(event.params.stakersPenalty)
   stake.sharesPenalized = stake.sharesPenalized.plus(event.params.stakersPenalty)
   stake.referrerSharesPenalized = stake.referrerSharesPenalized.plus(event.params.referrerPenalty)
   stake.save()
+}
+
+export function handleNewGlobals (event: NewGlobals): void {
+  let global = getOrCreateGlobal()
+  global.totalShares = event.params.totalShares
+  global.totalStaked = event.params.totalStaked
+  global.sharePrice = event.params.shareRate
+  global.referrerShares = event.params.referrerShares
+  global.currentWiseDay = event.params.currentWiseDay
+  let contract = WiseToken.bind(event.address)
+  global.ownerlessSupply = contract.balanceOf(contract.UNISWAP_PAIR())
+  global.circulatingSupply = contract.totalSupply()
+  global.liquidSupply = global.circulatingSupply.minus(global.ownerlessSupply)
+  global.mintedSupply = global.circulatingSupply.plus(global.totalStaked)
+  global.ownedSupply = global.liquidSupply.plus(global.totalStaked)
+  global.save()
+}
+
+export function handleNewSharePrice (event: NewSharePrice): void {
+  let global = getOrCreateGlobal()
+  global.sharePrice = event.params.newSharePrice
+  global.sharePricePrevious = event.params.oldSharePrice
+  global.save()
 }
