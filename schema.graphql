@@ -25,6 +25,7 @@ type User @entity {
   cmStatus: Boolean!
   cmStatusInLaunch: Boolean!
   gasRefunded: BigInt!
+  refundTransaction: String
 }
 
 type Reservation @entity {
